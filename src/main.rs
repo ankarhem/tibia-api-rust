@@ -24,7 +24,6 @@ async fn main() {
         "/worlds/:world/kill_statistics",
         get(worlds::get_kill_statistics),
     );
-    // .route("/foo/bar", get(foo_bar));
 
     let server = axum::Server::bind(&"0.0.0.0:7032".parse().unwrap())
         .serve(app.with_state(state).into_make_service());
@@ -36,5 +35,5 @@ async fn main() {
 }
 
 async fn root() -> &'static str {
-    "Hi from Axum!"
+    "Hello world"
 }

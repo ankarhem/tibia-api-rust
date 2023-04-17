@@ -7,6 +7,7 @@ edition = "2021"
 
 [dependencies]
 axum = { version = "0.6.15", features = ["macros"] }
-reqwest = "0.11.16"
+reqwest = { version = "0.11.16", features = ["brotli", "gzip", "deflate"] }
+scraper = "0.16.0"
 serde = { version = "1.0.160", features = ["derive"] }
 tokio = { version = "1.27.0", features = ["full"] }

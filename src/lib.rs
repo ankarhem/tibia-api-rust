@@ -14,14 +14,41 @@ pub struct MonsterStats {
 }
 
 pub fn scrape_kill_statistics(page: &str) -> Vec<MonsterStats> {
-    let ks = KillStatistics {
-        killed_players: 12,
-        killed_by_players: 138,
-    };
-    let stat = MonsterStats {
-        name: "Demon".to_string(),
-        last_day: ks.clone(),
-        last_week: ks,
-    };
-    vec![stat]
+    let document = scraper::Html::parse_document(&page);
+
+    let table_cell_selector =
+        scraper::Selector::parse("#KillStatisticsTable tr.DataRow > td").unwrap();
+    let cells = document
+        .select(&table_cell_selector)
+        .map(|cell| cell.inner_html())
+        .collect::<Vec<String>>();
+
+    let mut iter = cells.iter();
+
+    let mut stats: Vec<MonsterStats> = vec![];
+    while let (Some(name), Some(kp_day), Some(kbp_day), Some(kp_week), Some(kbp_week)) = (
+        iter.next(),
+        iter.next(),
+        iter.next(),
+        iter.next(),
+        iter.next(),
+    ) {
+        let last_day = KillStatistics {
+            killed_players: kp_day.parse().unwrap(),
+            killed_by_players: kbp_day.parse().unwrap(),
+        };
+
+        let last_week = KillStatistics {
+            killed_players: kp_week.parse().unwrap(),
+            killed_by_players: kbp_week.parse().unwrap(),
+        };
+
+        stats.push(MonsterStats {
+            name: name.to_string(),
+            last_day,
+            last_week,
+        })
+    }
+
+    stats
 }
