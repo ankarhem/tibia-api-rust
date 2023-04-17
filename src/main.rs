@@ -1,14 +1,33 @@
 use axum::{routing::get, Router};
+use reqwest;
+
+mod handlers;
+pub use crate::handlers::worlds;
+
+#[derive(Clone)]
+pub struct AppState {
+    client: reqwest::Client,
+}
+
+impl AppState {
+    fn new() -> AppState {
+        let client = reqwest::Client::new();
+        AppState { client }
+    }
+}
 
 #[tokio::main]
 async fn main() {
-    // our router
-    let app = Router::new().route("/", get(root));
-    // .route("/foo", get(get_foo).post(post_foo))
+    let state = AppState::new();
+
+    let app = Router::new().route("/", get(root)).route(
+        "/worlds/:world/kill_statistics",
+        get(worlds::get_kill_statistics),
+    );
     // .route("/foo/bar", get(foo_bar));
 
-    let server =
-        axum::Server::bind(&"0.0.0.0:7032".parse().unwrap()).serve(app.into_make_service());
+    let server = axum::Server::bind(&"0.0.0.0:7032".parse().unwrap())
+        .serve(app.with_state(state).into_make_service());
     let addr = server.local_addr();
 
     println!("Listening on {addr}");
