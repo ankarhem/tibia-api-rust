@@ -7,7 +7,8 @@ edition = "2021"
 
 [dependencies]
 axum = { version = "0.6.15", features = ["macros"] }
-reqwest = { version = "0.11.16", features = ["brotli", "gzip", "deflate"] }
+reqwest = { version = "0.11.16", features = ["brotli", "gzip", "deflate", "json"] }
 scraper = "0.16.0"
 serde = { version = "1.0.160", features = ["derive"] }
+serde_with = "2.3.2"
 tokio = { version = "1.27.0", features = ["full"] }

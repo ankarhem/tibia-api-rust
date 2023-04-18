@@ -11,7 +11,15 @@ pub struct AppState {
 
 impl AppState {
     fn new() -> AppState {
-        let client = reqwest::Client::new();
+        // user agent + encoding is required otherwise they block the request
+        // encoding is added automatically due to optional features gzip, deflate and brotli enabled
+        let client = reqwest::Client::builder()
+            .user_agent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:109.0) Gecko/20100101 Firefox/113.0")
+            .brotli(true)
+            .deflate(true)
+            .gzip(true)
+            .build()
+            .expect("Client::builder()");
         AppState { client }
     }
 }
@@ -20,10 +28,13 @@ impl AppState {
 async fn main() {
     let state = AppState::new();
 
-    let app = Router::new().route("/", get(root)).route(
-        "/worlds/:world/kill_statistics",
-        get(worlds::get_kill_statistics),
-    );
+    let app = Router::new()
+        .route("/", get(root))
+        .route(
+            "/worlds/:world/kill_statistics",
+            get(worlds::get_kill_statistics),
+        )
+        .route("/worlds", get(worlds::get_worlds));
 
     let server = axum::Server::bind(&"0.0.0.0:7032".parse().unwrap())
         .serve(app.with_state(state).into_make_service());
