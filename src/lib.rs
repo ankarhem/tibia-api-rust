@@ -1,12 +1,14 @@
 use serde::Serialize;
 
 #[derive(Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct KillStatistics {
     killed_players: i32,
     killed_by_players: i32,
 }
 
 #[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct MonsterStats {
     name: String,
     last_day: KillStatistics,
