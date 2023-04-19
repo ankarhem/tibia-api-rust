@@ -130,7 +130,7 @@ pub fn scrape_worlds(page: &str) -> WorldsData {
         worlds: vec![],
     };
 
-    if let (Some(record_table), Some(title), Some(worlds_table)) =
+    if let (Some(record_table), Some(_title), Some(worlds_table)) =
         (tables.next(), tables.next(), tables.next())
     {
         // RECORD PLAYERS
