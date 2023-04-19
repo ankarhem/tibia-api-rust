@@ -1,5 +1,10 @@
-use axum::{routing::get, Router};
-use reqwest;
+use std::collections::HashMap;
+
+use axum::{
+    response::{IntoResponse, Response},
+    routing::get,
+    Json, Router,
+};
 
 mod handlers;
 pub use crate::handlers::worlds;
@@ -29,7 +34,7 @@ async fn main() {
     let state = AppState::new();
 
     let app = Router::new()
-        .route("/", get(root))
+        .route("/__healthcheck", get(healthcheck))
         .route(
             "/worlds/:world/kill_statistics",
             get(worlds::get_kill_statistics),
@@ -45,6 +50,8 @@ async fn main() {
     server.await.unwrap();
 }
 
-async fn root() -> &'static str {
-    "Hello world"
+async fn healthcheck() -> Response {
+    let mut resp = HashMap::new();
+    resp.insert("ok", true);
+    Json(resp).into_response()
 }
