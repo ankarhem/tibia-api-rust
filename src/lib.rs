@@ -5,15 +5,16 @@ use thiserror::Error;
 
 use scraper::Selector;
 use serde::Serialize;
+use utoipa::ToSchema;
 
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Clone, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct KillStatistics {
     killed_players: i32,
     killed_by_players: i32,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct MonsterStats {
     name: String,
@@ -74,18 +75,18 @@ pub fn scrape_kill_statistics(page: &str) -> Result<Vec<MonsterStats>> {
     Ok(stats)
 }
 
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Debug, ToSchema)]
 #[serde(rename_all = "camelCase")]
-enum WorldTag {
+pub enum WorldTag {
     Blocked,
     Premium,
     Experimental,
     Locked,
 }
 
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Debug, ToSchema)]
 #[serde(rename_all = "camelCase")]
-enum PvpType {
+pub enum PvpType {
     Open,
     Optional,
     Hardcore,
@@ -94,7 +95,7 @@ enum PvpType {
 }
 
 #[derive(Debug)]
-struct ParsePvpError;
+pub struct ParsePvpError;
 
 impl FromStr for PvpType {
     type Err = ParsePvpError;
@@ -112,10 +113,10 @@ impl FromStr for PvpType {
     }
 }
 
-#[serde_with::skip_serializing_none]
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Debug, ToSchema)]
 #[serde(rename_all = "camelCase")]
-struct World {
+#[serde_with::skip_serializing_none]
+pub struct World {
     name: String,
     online: i32,
     location: String,
@@ -125,7 +126,7 @@ struct World {
     tags: Vec<WorldTag>,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct WorldsData {
     players_online: i32,

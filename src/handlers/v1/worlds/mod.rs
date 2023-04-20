@@ -16,6 +16,17 @@ pub struct PathParams {
     world_name: String,
 }
 
+/// List all worlds.
+///
+#[utoipa::path(
+    get,
+    path = "/api/v1/worlds",
+    responses(
+        (status = 200, description = "List all worlds", body = WorldsData),
+        (status = 500, description = "Internal server error", body = ApiError),
+    ),
+    tag = "Worlds"
+)]
 #[axum::debug_handler]
 pub async fn list_worlds(State(state): State<AppState>) -> Result<Response, ApiError> {
     let client = state.client;
@@ -41,7 +52,6 @@ pub async fn list_worlds(State(state): State<AppState>) -> Result<Response, ApiE
             Ok(json.into_response())
         }
         Err(e) => match e.downcast_ref() {
-            Some(tibia_api::ParseError::Is404) => Err(ApiError::not_found("World not found")),
             Some(tibia_api::ParseError::NoneValueReceived) => Err(ApiError::internal_server_error(
                 "Unable to parse unexpected response from tibia.com",
             )),
@@ -52,6 +62,18 @@ pub async fn list_worlds(State(state): State<AppState>) -> Result<Response, ApiE
     }
 }
 
+/// List all killstatistics for a world.
+///
+#[utoipa::path(
+    get,
+    path = "/api/v1/worlds/{world_name}/kill-statistics",
+    responses(
+        (status = 200, description = "List all kill statistics for `{world_name}`", body = WorldsData),
+        (status = 404, description = "World not found", body = ApiError),
+        (status = 500, description = "Internal server error", body = ApiError),
+    ),
+    tag = "Worlds"
+)]
 #[axum::debug_handler]
 pub async fn get_kill_statistics(
     State(state): State<AppState>,

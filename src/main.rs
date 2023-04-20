@@ -1,13 +1,15 @@
 use std::collections::HashMap;
 
 use axum::{
-    response::{IntoResponse, Response},
+    response::{IntoResponse, Redirect, Response},
     routing::get,
     Json, Router,
 };
+use utoipa::OpenApi;
+use utoipa_swagger_ui::SwaggerUi;
 
 mod handlers;
-pub use crate::handlers::v1;
+pub use crate::handlers::{v1, ApiError};
 
 #[derive(Clone)]
 pub struct AppState {
@@ -31,9 +33,27 @@ impl AppState {
 
 #[tokio::main]
 async fn main() {
+    #[derive(OpenApi)]
+    #[openapi(
+        paths(v1::worlds::list_worlds, v1::worlds::get_kill_statistics,),
+        components(schemas(
+            ApiError,
+            tibia_api::WorldsData,
+            tibia_api::World,
+            tibia_api::WorldTag,
+            tibia_api::PvpType,
+            tibia_api::MonsterStats,
+            tibia_api::KillStatistics,
+        )),
+        tags((name = "Worlds", description = "World related endpoints"))
+    )]
+    struct ApiDocV1;
+
     let state = AppState::new();
 
     let app = Router::new()
+        .merge(SwaggerUi::new("/api-docs").url("/api-docs/openapi.json", ApiDocV1::openapi()))
+        .route("/", get(redirect_to_swagger_ui))
         .route("/__healthcheck", get(healthcheck))
         .route(
             "/api/v1/worlds/:world_name/kill-statistics",
@@ -48,6 +68,10 @@ async fn main() {
     println!("Listening on {addr}");
 
     server.await.unwrap();
+}
+
+async fn redirect_to_swagger_ui() -> Redirect {
+    Redirect::temporary("/api-docs")
 }
 
 async fn healthcheck() -> Response {
