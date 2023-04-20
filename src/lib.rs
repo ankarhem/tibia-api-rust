@@ -1,5 +1,8 @@
 use std::str::FromStr;
 
+use anyhow::{anyhow, Result};
+use thiserror::Error;
+
 use scraper::Selector;
 use serde::Serialize;
 
@@ -18,10 +21,20 @@ pub struct MonsterStats {
     last_week: KillStatistics,
 }
 
-pub fn scrape_kill_statistics(page: &str) -> Vec<MonsterStats> {
+#[derive(Debug, Error)]
+pub enum ParseError {
+    #[error("Invalid selector: `{0}`")]
+    InvalidSelector(String),
+    #[error("None value received")]
+    NoneValueReceived,
+}
+
+pub fn scrape_kill_statistics(page: &str) -> Result<Vec<MonsterStats>> {
     let document = scraper::Html::parse_document(page);
 
-    let table_cell_selector = Selector::parse("#KillStatisticsTable tr.DataRow > td").unwrap();
+    let selector_str = "#KillStatisticsTable tr.DataRow > td";
+    let table_cell_selector = Selector::parse(selector_str)
+        .map_err(|_| anyhow!(ParseError::InvalidSelector(selector_str.to_string())))?;
     let cells = document
         .select(&table_cell_selector)
         .map(|cell| cell.inner_html())
@@ -38,13 +51,13 @@ pub fn scrape_kill_statistics(page: &str) -> Vec<MonsterStats> {
         iter.next(),
     ) {
         let last_day = KillStatistics {
-            killed_players: kp_day.parse().unwrap(),
-            killed_by_players: kbp_day.parse().unwrap(),
+            killed_players: kp_day.parse()?,
+            killed_by_players: kbp_day.parse()?,
         };
 
         let last_week = KillStatistics {
-            killed_players: kp_week.parse().unwrap(),
-            killed_by_players: kbp_week.parse().unwrap(),
+            killed_players: kp_week.parse()?,
+            killed_by_players: kbp_week.parse()?,
         };
 
         stats.push(MonsterStats {
@@ -54,7 +67,7 @@ pub fn scrape_kill_statistics(page: &str) -> Vec<MonsterStats> {
         })
     }
 
-    stats
+    Ok(stats)
 }
 
 #[derive(Serialize, Debug)]
@@ -117,10 +130,11 @@ pub struct WorldsData {
     worlds: Vec<World>,
 }
 
-pub fn scrape_worlds(page: &str) -> WorldsData {
+pub fn scrape_worlds(page: &str) -> Result<WorldsData> {
     let document = scraper::Html::parse_document(page);
 
-    let tables_selector = Selector::parse(".TableContent").unwrap();
+    let tables_selector =
+        Selector::parse(".TableContent").map_err(|_| anyhow!("Invalid selector"))?;
     let mut tables = document.select(&tables_selector);
 
     let mut worlds_data = WorldsData {
@@ -135,23 +149,34 @@ pub fn scrape_worlds(page: &str) -> WorldsData {
     {
         // RECORD PLAYERS
         let record_html = record_table.inner_html();
-        let record_date_start = record_html.find("(").unwrap() + 3; // skip `(on`
-        let record_date_end = record_html.find(")").unwrap();
+        let record_date_start = record_html
+            .find("(")
+            .ok_or(anyhow!("None value received"))?
+            + 3; // skip `(on`
+        let record_date_end = record_html
+            .find(")")
+            .ok_or(anyhow!("None value received"))?;
         let record_date = &record_html[record_date_start..record_date_end].replace("&nbsp;", " ");
         let record_date = record_date.trim().to_string();
         worlds_data.record_date = record_date;
 
-        let record_players_start = record_html.find("</b>").unwrap() + 4; // len
-        let record_players_end = record_html.find("players").unwrap();
+        let record_players_start = record_html
+            .find("</b>")
+            .ok_or(anyhow!("None value received"))?
+            + 4; // len
+        let record_players_end = record_html
+            .find("players")
+            .ok_or(anyhow!("None value received"))?;
         let record_players = &record_html[record_players_start..record_players_end]
             .replace("&nbsp;", " ")
             .replace(",", "");
-        let record_players = record_players.trim().parse::<i32>().unwrap();
+        let record_players = record_players.trim().parse::<i32>()?;
         worlds_data.record_players = record_players;
 
         // WORLDS
-        let world_row_relector = Selector::parse("tr.Odd > td, tr.Even > td").unwrap();
-        let name_selector = Selector::parse("a").unwrap();
+        let world_row_relector = Selector::parse("tr.Odd > td, tr.Even > td")
+            .map_err(|_| anyhow!("Invalid selector"))?;
+        let name_selector = Selector::parse("a").map_err(|_| anyhow!("Invalid selector"))?;
         let mut cells = worlds_table.select(&world_row_relector);
 
         while let (
@@ -184,14 +209,21 @@ pub fn scrape_worlds(page: &str) -> WorldsData {
                 tags.push(WorldTag::Locked)
             }
 
+            let battl_eye_selector =
+                Selector::parse(".HelperDivIndicator").map_err(|_| anyhow!("Invalid selector"))?;
+
             let world = World {
-                name: name.select(&name_selector).next().unwrap().inner_html(),
-                online: online.inner_html().parse().unwrap(),
+                name: name
+                    .select(&name_selector)
+                    .next()
+                    .ok_or(anyhow!("Could not parse world name"))?
+                    .inner_html(),
+                online: online.inner_html().parse()?,
                 location: location.inner_html(),
-                pvp_type: pvp_type.inner_html().parse().unwrap(),
+                pvp_type: pvp_type.inner_html().parse()?,
                 battl_eye: battl_eye.inner_html().len() > 0,
                 battl_eye_date: battl_eye
-                    .select(&Selector::parse(".HelperDivIndicator").unwrap())
+                    .select(&battl_eye_selector)
                     .next()
                     .and_then(|indic| {
                         indic.value().attr("onmouseover").map(|s| {
@@ -201,11 +233,8 @@ pub fn scrape_worlds(page: &str) -> WorldsData {
 
                             let start_pattern = "since ";
                             let end_pattern = ".</p>";
-                            let start = s
-                                .find(start_pattern)
-                                .map(|i| i + start_pattern.len())
-                                .unwrap();
-                            let end = s.find(end_pattern).unwrap();
+                            let start = s.find(start_pattern).map(|i| i + start_pattern.len())?;
+                            let end = s.find(end_pattern)?;
                             let date = s[start..end].to_string();
 
                             Some(date)
@@ -218,10 +247,12 @@ pub fn scrape_worlds(page: &str) -> WorldsData {
 
             worlds_data.worlds.push(world);
         }
+    } else {
+        return Err(anyhow!("Could not parse world tables"));
     }
 
     let players_online: i32 = worlds_data.worlds.iter().map(|w| w.online).sum();
     worlds_data.players_online = players_online;
 
-    worlds_data
+    Ok(worlds_data)
 }

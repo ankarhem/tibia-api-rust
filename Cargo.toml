@@ -6,9 +6,11 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+anyhow = "1.0.70"
 axum = { version = "0.6.15", features = ["macros"] }
 reqwest = { version = "0.11.16", features = ["brotli", "gzip", "deflate", "json"] }
 scraper = "0.16.0"
 serde = { version = "1.0.160", features = ["derive"] }
 serde_with = "2.3.2"
+thiserror = "1.0.40"
 tokio = { version = "1.27.0", features = ["full"] }

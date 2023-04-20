@@ -39,7 +39,7 @@ async fn main() {
             "/worlds/:world/kill_statistics",
             get(worlds::get_kill_statistics),
         )
-        .route("/worlds", get(worlds::get_worlds));
+        .route("/worlds", get(worlds::list_worlds));
 
     let server = axum::Server::bind(&"0.0.0.0:7032".parse().unwrap())
         .serve(app.with_state(state).into_make_service());
