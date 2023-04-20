@@ -11,12 +11,15 @@ use utoipa::{
 };
 use utoipa_swagger_ui::SwaggerUi;
 
+use http_cache_reqwest::{CACacheManager, Cache, CacheMode, HttpCache};
+use reqwest_middleware::{ClientBuilder, ClientWithMiddleware};
+
 mod handlers;
 pub use crate::handlers::{v1, ApiError};
 
 #[derive(Clone)]
 pub struct AppState {
-    client: reqwest::Client,
+    client: ClientWithMiddleware,
 }
 
 impl AppState {
@@ -30,6 +33,14 @@ impl AppState {
             .gzip(true)
             .build()
             .expect("Client::builder()");
+
+        let client = ClientBuilder::new(client)
+            .with(Cache(HttpCache {
+                mode: CacheMode::Default,
+                manager: CACacheManager::default(),
+                options: None,
+            }))
+            .build();
         AppState { client }
     }
 }
