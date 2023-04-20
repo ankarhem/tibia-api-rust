@@ -7,7 +7,7 @@ use axum::{
 };
 
 mod handlers;
-pub use crate::handlers::worlds;
+pub use crate::handlers::v1;
 
 #[derive(Clone)]
 pub struct AppState {
@@ -36,10 +36,10 @@ async fn main() {
     let app = Router::new()
         .route("/__healthcheck", get(healthcheck))
         .route(
-            "/worlds/:world/kill-statistics",
-            get(worlds::get_kill_statistics),
+            "/api/v1/worlds/:world_name/kill-statistics",
+            get(v1::worlds::get_kill_statistics),
         )
-        .route("/worlds", get(worlds::list_worlds));
+        .route("/api/v1/worlds", get(v1::worlds::list_worlds));
 
     let server = axum::Server::bind(&"0.0.0.0:7032".parse().unwrap())
         .serve(app.with_state(state).into_make_service());

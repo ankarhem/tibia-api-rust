@@ -7,15 +7,13 @@ use axum::{
 };
 use serde::{Deserialize, Serialize};
 
-use crate::AppState;
-
-use super::ApiError;
+use crate::{handlers::ApiError, AppState};
 
 const COMMUNITY_URL: &'static str = "https://www.tibia.com/community/";
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct PathParams {
-    world: String,
+    world_name: String,
 }
 
 #[axum::debug_handler]
@@ -64,7 +62,7 @@ pub async fn get_kill_statistics(
     // Form data
     let mut params = HashMap::new();
     params.insert("subtopic", "killstatistics");
-    params.insert("world", &path_params.world);
+    params.insert("world", &path_params.world_name);
 
     let response = client
         .get(COMMUNITY_URL)

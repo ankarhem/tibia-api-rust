@@ -5,7 +5,7 @@ use axum::{
 };
 use serde::Serialize;
 
-pub mod worlds;
+pub mod v1;
 
 #[derive(Debug, Serialize)]
 pub struct ApiError {
