@@ -5,7 +5,10 @@ use axum::{
     routing::get,
     Json, Router,
 };
-use utoipa::OpenApi;
+use utoipa::{
+    openapi::{ContactBuilder, InfoBuilder},
+    OpenApi,
+};
 use utoipa_swagger_ui::SwaggerUi;
 
 mod handlers;
@@ -31,6 +34,12 @@ impl AppState {
     }
 }
 
+const API_DESCRIPTION: &'static str = r#"
+The data is based on [tibia.com](https://www.tibia.com), the only official Tibia website.
+
+Tibia is a registered trademark of [CipSoft GmbH](https://www.cipsoft.com/en/). Tibia and all products related to Tibia are copyright by [CipSoft GmbH](https://www.cipsoft.com/en/).
+"#;
+
 #[tokio::main]
 async fn main() {
     #[derive(OpenApi)]
@@ -48,11 +57,24 @@ async fn main() {
         tags((name = "Worlds", description = "World related endpoints"))
     )]
     struct ApiDocV1;
+    let mut openapi = ApiDocV1::openapi();
+    openapi.info = InfoBuilder::new()
+        .title("Tibia API")
+        .description(Some(API_DESCRIPTION))
+        .version("1.0.0")
+        .contact(Some(
+            ContactBuilder::new()
+                .name(Some("Jakob Ankarhem"))
+                .email(Some("jakob@ankarhem.dev"))
+                .url(Some("https://github.com/ankarhem"))
+                .build(),
+        ))
+        .build();
 
     let state = AppState::new();
 
     let app = Router::new()
-        .merge(SwaggerUi::new("/api-docs").url("/api-docs/openapi.json", ApiDocV1::openapi()))
+        .merge(SwaggerUi::new("/api-docs").url("/api-docs/openapi.json", openapi))
         .route("/", get(redirect_to_swagger_ui))
         .route("/__healthcheck", get(healthcheck))
         .route(
