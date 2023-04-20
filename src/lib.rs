@@ -23,6 +23,8 @@ pub struct MonsterStats {
 
 #[derive(Debug, Error)]
 pub enum ParseError {
+    #[error("Page Not Found")]
+    Is404,
     #[error("Invalid selector: `{0}`")]
     InvalidSelector(String),
     #[error("None value received")]
@@ -35,10 +37,15 @@ pub fn scrape_kill_statistics(page: &str) -> Result<Vec<MonsterStats>> {
     let selector_str = "#KillStatisticsTable tr.DataRow > td";
     let table_cell_selector = Selector::parse(selector_str)
         .map_err(|_| anyhow!(ParseError::InvalidSelector(selector_str.to_string())))?;
+
     let cells = document
         .select(&table_cell_selector)
         .map(|cell| cell.inner_html())
         .collect::<Vec<String>>();
+
+    if cells.len() == 0 {
+        return Err(anyhow!(ParseError::Is404));
+    }
 
     let mut iter = cells.iter();
 

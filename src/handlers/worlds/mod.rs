@@ -66,9 +66,16 @@ pub async fn get_kill_statistics(
         .await
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
 
-    let stats = tibia_api::scrape_kill_statistics(&page_as_str)
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    let stats = tibia_api::scrape_kill_statistics(&page_as_str);
 
-    let json = Json(stats);
-    Ok(json.into_response())
+    match stats {
+        Ok(stats) => {
+            let json = Json(stats);
+            Ok(json.into_response())
+        }
+        Err(e) => match e.downcast_ref() {
+            Some(tibia_api::ParseError::Is404) => Err(StatusCode::NOT_FOUND),
+            _ => Err(StatusCode::INTERNAL_SERVER_ERROR),
+        },
+    }
 }
