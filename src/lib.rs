@@ -25,8 +25,6 @@ pub struct MonsterStats {
 pub enum ParseError {
     #[error("Page Not Found")]
     Is404,
-    #[error("Invalid selector: `{0}`")]
-    InvalidSelector(String),
     #[error("None value received")]
     NoneValueReceived,
 }
@@ -34,9 +32,8 @@ pub enum ParseError {
 pub fn scrape_kill_statistics(page: &str) -> Result<Vec<MonsterStats>> {
     let document = scraper::Html::parse_document(page);
 
-    let selector_str = "#KillStatisticsTable tr.DataRow > td";
-    let table_cell_selector = Selector::parse(selector_str)
-        .map_err(|_| anyhow!(ParseError::InvalidSelector(selector_str.to_string())))?;
+    let table_cell_selector = Selector::parse("#KillStatisticsTable tr.DataRow > td")
+        .expect("Invalid selector for kill statistics table");
 
     let cells = document
         .select(&table_cell_selector)
@@ -141,7 +138,7 @@ pub fn scrape_worlds(page: &str) -> Result<WorldsData> {
     let document = scraper::Html::parse_document(page);
 
     let tables_selector =
-        Selector::parse(".TableContent").map_err(|_| anyhow!("Invalid selector"))?;
+        Selector::parse(".TableContent").expect("Invalid selector for worlds table");
     let mut tables = document.select(&tables_selector);
 
     let mut worlds_data = WorldsData {
@@ -181,8 +178,8 @@ pub fn scrape_worlds(page: &str) -> Result<WorldsData> {
         worlds_data.record_players = record_players;
 
         // WORLDS
-        let world_row_relector = Selector::parse("tr.Odd > td, tr.Even > td")
-            .map_err(|_| anyhow!("Invalid selector"))?;
+        let world_row_relector =
+            Selector::parse("tr.Odd > td, tr.Even > td").expect("Invalid selector for world row");
         let name_selector = Selector::parse("a").map_err(|_| anyhow!("Invalid selector"))?;
         let mut cells = worlds_table.select(&world_row_relector);
 
@@ -217,7 +214,7 @@ pub fn scrape_worlds(page: &str) -> Result<WorldsData> {
             }
 
             let battl_eye_selector =
-                Selector::parse(".HelperDivIndicator").map_err(|_| anyhow!("Invalid selector"))?;
+                Selector::parse(".HelperDivIndicator").expect("Invalid selector for battl eye");
 
             let world = World {
                 name: name

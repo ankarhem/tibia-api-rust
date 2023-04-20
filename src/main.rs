@@ -36,7 +36,7 @@ async fn main() {
     let app = Router::new()
         .route("/__healthcheck", get(healthcheck))
         .route(
-            "/worlds/:world/kill_statistics",
+            "/worlds/:world/kill-statistics",
             get(worlds::get_kill_statistics),
         )
         .route("/worlds", get(worlds::list_worlds));

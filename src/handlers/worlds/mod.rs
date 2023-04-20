@@ -35,11 +35,23 @@ pub async fn list_worlds(State(state): State<AppState>) -> Result<Response, ApiE
         ApiError::internal_server_error("Could not decode source response body from tibia.com")
     })?;
 
-    let worlds = tibia_api::scrape_worlds(&page_as_str)
-        .map_err(|_| ApiError::internal_server_error("Failed to scrape source data"))?;
+    let worlds = tibia_api::scrape_worlds(&page_as_str);
 
-    let json = Json(worlds);
-    Ok(json.into_response())
+    match worlds {
+        Ok(worlds) => {
+            let json = Json(worlds);
+            Ok(json.into_response())
+        }
+        Err(e) => match e.downcast_ref() {
+            Some(tibia_api::ParseError::Is404) => Err(ApiError::not_found("World not found")),
+            Some(tibia_api::ParseError::NoneValueReceived) => Err(ApiError::internal_server_error(
+                "Unable to parse unexpected response from tibia.com",
+            )),
+            _ => Err(ApiError::internal_server_error(
+                "Failed to scrape source data",
+            )),
+        },
+    }
 }
 
 #[axum::debug_handler]
@@ -74,6 +86,9 @@ pub async fn get_kill_statistics(
         }
         Err(e) => match e.downcast_ref() {
             Some(tibia_api::ParseError::Is404) => Err(ApiError::not_found("World not found")),
+            Some(tibia_api::ParseError::NoneValueReceived) => Err(ApiError::internal_server_error(
+                "Unable to parse unexpected response from tibia.com",
+            )),
             _ => Err(ApiError::internal_server_error(
                 "Failed to scrape source data",
             )),
