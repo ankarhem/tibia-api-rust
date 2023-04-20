@@ -115,13 +115,13 @@ impl FromStr for PvpType {
 
 #[derive(Serialize, Debug, ToSchema)]
 #[serde(rename_all = "camelCase")]
-#[serde_with::skip_serializing_none]
 pub struct World {
     name: String,
     online: i32,
     location: String,
     pvp_type: String,
     battl_eye: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
     battl_eye_date: Option<String>,
     tags: Vec<WorldTag>,
 }
