@@ -5,10 +5,11 @@ use axum::{
     response::{IntoResponse, Response},
     Json,
 };
-use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
 
 use crate::AppState;
+
+use super::ApiError;
 
 const COMMUNITY_URL: &'static str = "https://www.tibia.com/community/";
 
@@ -18,7 +19,7 @@ pub struct PathParams {
 }
 
 #[axum::debug_handler]
-pub async fn list_worlds(State(state): State<AppState>) -> Result<Response, StatusCode> {
+pub async fn list_worlds(State(state): State<AppState>) -> Result<Response, ApiError> {
     let client = state.client;
 
     let mut params = HashMap::new();
@@ -28,15 +29,14 @@ pub async fn list_worlds(State(state): State<AppState>) -> Result<Response, Stat
         .query(&params)
         .send()
         .await
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+        .map_err(|_| ApiError::internal_server_error("Could not connect to tibia.com"))?;
 
-    let page_as_str = response
-        .text()
-        .await
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    let page_as_str = response.text().await.map_err(|_| {
+        ApiError::internal_server_error("Could not decode source response body from tibia.com")
+    })?;
 
-    let worlds =
-        tibia_api::scrape_worlds(&page_as_str).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    let worlds = tibia_api::scrape_worlds(&page_as_str)
+        .map_err(|_| ApiError::internal_server_error("Failed to scrape source data"))?;
 
     let json = Json(worlds);
     Ok(json.into_response())
@@ -46,7 +46,7 @@ pub async fn list_worlds(State(state): State<AppState>) -> Result<Response, Stat
 pub async fn get_kill_statistics(
     State(state): State<AppState>,
     Path(path_params): Path<PathParams>,
-) -> Result<Response, StatusCode> {
+) -> Result<Response, ApiError> {
     let client = state.client;
 
     // Form data
@@ -59,12 +59,11 @@ pub async fn get_kill_statistics(
         .query(&params)
         .send()
         .await
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+        .map_err(|_| ApiError::internal_server_error("Could not connect to tibia.com"))?;
 
-    let page_as_str = response
-        .text()
-        .await
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    let page_as_str = response.text().await.map_err(|_| {
+        ApiError::internal_server_error("Could not decode source response body from tibia.com")
+    })?;
 
     let stats = tibia_api::scrape_kill_statistics(&page_as_str);
 
@@ -74,8 +73,10 @@ pub async fn get_kill_statistics(
             Ok(json.into_response())
         }
         Err(e) => match e.downcast_ref() {
-            Some(tibia_api::ParseError::Is404) => Err(StatusCode::NOT_FOUND),
-            _ => Err(StatusCode::INTERNAL_SERVER_ERROR),
+            Some(tibia_api::ParseError::Is404) => Err(ApiError::not_found("World not found")),
+            _ => Err(ApiError::internal_server_error(
+                "Failed to scrape source data",
+            )),
         },
     }
 }
