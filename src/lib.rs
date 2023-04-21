@@ -149,7 +149,7 @@ pub enum TransferType {
 #[serde(rename_all = "camelCase")]
 pub struct World {
     name: String,
-    online: u32,
+    players_online: u32,
     location: Location,
     pvp_type: String,
     battl_eye: bool,
@@ -230,7 +230,7 @@ pub fn scrape_worlds(page: &str) -> Result<WorldsData> {
 
         while let (
             Some(name),
-            Some(online),
+            Some(players_online),
             Some(location),
             Some(pvp_type),
             Some(battl_eye),
@@ -270,7 +270,7 @@ pub fn scrape_worlds(page: &str) -> Result<WorldsData> {
                         "Unexpected content when trying to parse name".into(),
                     ))?
                     .inner_html(),
-                online: online.inner_html().parse()?,
+                players_online: players_online.inner_html().parse()?,
                 location: location.inner_html().parse()?,
                 pvp_type: pvp_type.inner_html().parse()?,
                 battl_eye: battl_eye.inner_html().len() > 0,
@@ -307,7 +307,7 @@ pub fn scrape_worlds(page: &str) -> Result<WorldsData> {
         .into());
     }
 
-    let players_online: u32 = worlds_data.worlds.iter().map(|w| w.online).sum();
+    let players_online: u32 = worlds_data.worlds.iter().map(|w| w.players_online).sum();
     worlds_data.players_online = players_online;
 
     Ok(worlds_data)

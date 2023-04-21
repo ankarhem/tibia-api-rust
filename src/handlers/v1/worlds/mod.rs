@@ -68,7 +68,7 @@ pub async fn list_worlds(State(state): State<AppState>) -> Result<Response, ApiE
     get,
     path = "/api/v1/worlds/{name}",
     responses(
-        (status = 200, description = "Shows all details about a world", body = WorldsData),
+        (status = 200, description = "Shows all details about a world", body = WorldDetails),
         (status = 404, description = "World not found", body = ApiError),
         (status = 500, description = "Internal server error", body = ApiError),
     ),
