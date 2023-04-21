@@ -48,8 +48,9 @@ async fn main() {
     #[openapi(
         paths(
             v1::worlds::list_worlds,
-            v1::worlds::get_kill_statistics,
-            v1::worlds::get_world_details
+            v1::worlds::get_world_kill_statistics,
+            v1::worlds::get_world_details,
+            v1::worlds::get_world_guilds
         ),
         components(schemas(
             ApiError,
@@ -65,6 +66,7 @@ async fn main() {
             tibia_api::Vocation,
             tibia_api::Player,
             tibia_api::WorldDetails,
+            tibia_api::Guild
         )),
         tags((name = "Worlds", description = "World related endpoints"))
     )]
@@ -87,8 +89,12 @@ async fn main() {
         .route("/api/v1/worlds", get(v1::worlds::list_worlds))
         .route("/api/v1/worlds/:name", get(v1::worlds::get_world_details))
         .route(
+            "/api/v1/worlds/:name/guilds",
+            get(v1::worlds::get_world_guilds),
+        )
+        .route(
             "/api/v1/worlds/:name/kill-statistics",
-            get(v1::worlds::get_kill_statistics),
+            get(v1::worlds::get_world_kill_statistics),
         );
 
     let server = axum::Server::bind(&"0.0.0.0:7032".parse().unwrap())
@@ -131,7 +137,7 @@ This is a helper API for grabbing the data available on the [Tibia](https://www.
 
 The source code is available on [GitHub](https://github.com/ankarhem/tibia-api-rust).
 
-Contact me at [jakob@ankarhem.dev](mailto:jakob@ankarhem.dev), or raise an issue on [GitHub](https://github.com/ankarhem/tibia-api-rust/issues).
+Contact me at [jakob@ankarhem.dev](mailto:jakob@ankarhem.dev), or raise an [issue](https://github.com/ankarhem/tibia-api-rust/issues).
 
 <h2>Disclaimer</h2>
 

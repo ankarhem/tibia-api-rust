@@ -22,7 +22,7 @@ pub struct PathParams {
     get,
     path = "/api/v1/worlds",
     responses(
-        (status = 200, description = "List all worlds", body = WorldsData),
+        (status = 200, description = "Object containing a list of worlds and some metadata", body = WorldsData),
         (status = 500, description = "Internal server error", body = ApiError),
     ),
     tag = "Worlds"
@@ -68,7 +68,7 @@ pub async fn list_worlds(State(state): State<AppState>) -> Result<Response, ApiE
     get,
     path = "/api/v1/worlds/{name}",
     responses(
-        (status = 200, description = "Shows all details about a world", body = WorldDetails),
+        (status = 200, description = "Detailed information about a world", body = WorldDetails),
         (status = 404, description = "World not found", body = ApiError),
         (status = 500, description = "Internal server error", body = ApiError),
     ),
@@ -114,20 +114,20 @@ pub async fn get_world_details(
     }
 }
 
-/// List all killstatistics for a world.
+/// List killstatistics for a world.
 ///
 #[utoipa::path(
     get,
     path = "/api/v1/worlds/{name}/kill-statistics",
     responses(
-        (status = 200, description = "List all kill statistics for `{name}`", body = [MonsterStats]),
+        (status = 200, description = "List of killstatistics", body = [MonsterStats]),
         (status = 404, description = "World not found", body = ApiError),
         (status = 500, description = "Internal server error", body = ApiError),
     ),
     tag = "Worlds"
 )]
 #[axum::debug_handler]
-pub async fn get_kill_statistics(
+pub async fn get_world_kill_statistics(
     State(state): State<AppState>,
     Path(path_params): Path<PathParams>,
 ) -> Result<Response, ApiError> {
@@ -154,6 +154,60 @@ pub async fn get_kill_statistics(
     match stats {
         Ok(stats) => {
             let json = Json(stats);
+            Ok(json.into_response())
+        }
+        Err(e) => match e.downcast_ref() {
+            Some(tibia_api::ParseError::Is404) => Err(ApiError::not_found("World not found")),
+            Some(tibia_api::ParseError::UnexpectedPageContent(s)) => {
+                Err(ApiError::internal_server_error(s))
+            }
+            _ => Err(ApiError::internal_server_error(
+                "Unknown error while parsing source data",
+            )),
+        },
+    }
+}
+
+/// List all guilds for a world.
+///
+#[utoipa::path(
+    get,
+    path = "/api/v1/worlds/{name}/guilds",
+    responses(
+        (status = 200, description = "List of guilds", body = [Guild]),
+        (status = 404, description = "World not found", body = ApiError),
+        (status = 500, description = "Internal server error", body = ApiError),
+    ),
+    tag = "Worlds"
+)]
+#[axum::debug_handler]
+pub async fn get_world_guilds(
+    State(state): State<AppState>,
+    Path(path_params): Path<PathParams>,
+) -> Result<Response, ApiError> {
+    let client = state.client;
+
+    // Form data
+    let mut params = HashMap::new();
+    params.insert("subtopic", "guilds");
+    params.insert("world", &path_params.name);
+
+    let response = client
+        .get(COMMUNITY_URL)
+        .query(&params)
+        .send()
+        .await
+        .map_err(|_| ApiError::internal_server_error("Could not connect to tibia.com"))?;
+
+    let page_as_str = response.text().await.map_err(|_| {
+        ApiError::internal_server_error("Could not decode source response body from tibia.com")
+    })?;
+
+    let guilds = tibia_api::scrape_guilds(&page_as_str);
+
+    match guilds {
+        Ok(guilds) => {
+            let json = Json(guilds);
             Ok(json.into_response())
         }
         Err(e) => match e.downcast_ref() {

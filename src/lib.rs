@@ -145,6 +145,7 @@ pub enum TransferType {
     Open,
 }
 
+#[serde_with::skip_serializing_none]
 #[derive(Serialize, Debug, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct World {
@@ -153,7 +154,6 @@ pub struct World {
     location: Location,
     pvp_type: String,
     battl_eye: bool,
-    #[serde(skip_serializing_if = "Option::is_none")]
     battl_eye_date: Option<String>,
     premium_required: bool,
     transfer_type: TransferType,
@@ -346,6 +346,7 @@ impl FromStr for Vocation {
     }
 }
 
+#[serde_with::skip_serializing_none]
 #[derive(Debug, Serialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct Player {
@@ -354,6 +355,7 @@ pub struct Player {
     vocation: Option<Vocation>,
 }
 
+#[serde_with::skip_serializing_none]
 #[derive(Debug, Serialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct WorldDetails {
@@ -366,7 +368,6 @@ pub struct WorldDetails {
     pvp_type: PvpType,
     world_quest_titles: Vec<String>,
     battl_eye: bool,
-    #[serde(skip_serializing_if = "Option::is_none")]
     battl_eye_date: Option<String>,
     game_world_type: GameWorldType,
     transfer_type: TransferType,
@@ -602,6 +603,73 @@ pub fn scrape_world_details(page: &str) -> Result<WorldDetails> {
     } else {
         return Err(ParseError::UnexpectedPageContent("Selecting tables".into()).into());
     }
+}
+
+#[serde_with::skip_serializing_none]
+#[derive(Debug, Serialize, ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct Guild {
+    logo: Option<String>,
+    name: String,
+    description: Option<String>,
+    active: bool,
+}
+
+pub fn scrape_guilds(page: &str) -> Result<Vec<Guild>> {
+    let document = scraper::Html::parse_document(&page);
+
+    let guild_tables_selector =
+        Selector::parse(".TableContentContainer").expect("Invalid selector for guild tables");
+    let guild_tables = document.select(&guild_tables_selector);
+
+    let row_selector = Selector::parse("tr:not(:first-child)").expect("Invalid selector for rows");
+    let cell_selector = Selector::parse("td").expect("Invalid selector for cells");
+    let img_selector = Selector::parse("img").expect("Invalid selector for guild logo");
+
+    let mut guilds = vec![];
+    let mut active = true;
+    for table in guild_tables {
+        for row in table.select(&row_selector) {
+            let mut cells = row.select(&cell_selector);
+            if let (Some(logo), Some(name_description), Some(_)) =
+                (cells.next(), cells.next(), cells.next())
+            {
+                let logo = logo
+                    .select(&img_selector)
+                    .next()
+                    .map(|img| img.value().attr("src").map(|src| src.to_string()))
+                    .flatten();
+
+                let mut name_description_iterator = name_description.text().take(2);
+
+                let name = name_description_iterator
+                    .next()
+                    .map(|s| s.to_string())
+                    .ok_or(ParseError::UnexpectedPageContent(format!(
+                        "Unexpected content in name/description cell `{}`",
+                        name_description.inner_html()
+                    )))?;
+
+                let description = name_description_iterator.next().map(|s| s.to_string());
+
+                guilds.push(Guild {
+                    logo,
+                    name,
+                    description,
+                    active,
+                });
+            } else {
+                return Err(
+                    ParseError::UnexpectedPageContent("Unexpected guild table row".into()).into(),
+                );
+            }
+        }
+        // first table == active guilds,
+        // second table == guilds in formation
+        active = false;
+    }
+
+    Ok(guilds)
 }
 
 fn unescape_string(page: &str) -> String {
