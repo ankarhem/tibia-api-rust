@@ -5,10 +5,7 @@ use axum::{
     routing::get,
     Json, Router,
 };
-use utoipa::{
-    openapi::{ContactBuilder, InfoBuilder},
-    OpenApi,
-};
+use utoipa::{openapi::InfoBuilder, OpenApi};
 use utoipa_swagger_ui::SwaggerUi;
 
 use http_cache_reqwest::{CACacheManager, Cache, CacheMode, HttpCache};
@@ -45,12 +42,6 @@ impl AppState {
     }
 }
 
-const API_DESCRIPTION: &'static str = r#"
-The data is based on [tibia.com](https://www.tibia.com), the only official Tibia website.
-
-Tibia is a registered trademark of [CipSoft GmbH](https://www.cipsoft.com/en/). Tibia and all products related to Tibia are copyright by [CipSoft GmbH](https://www.cipsoft.com/en/).
-"#;
-
 #[tokio::main]
 async fn main() {
     #[derive(OpenApi)]
@@ -83,13 +74,6 @@ async fn main() {
         .title("Tibia API")
         .description(Some(API_DESCRIPTION))
         .version("1.0.0")
-        .contact(Some(
-            ContactBuilder::new()
-                .name(Some("Jakob Ankarhem"))
-                .email(Some("jakob@ankarhem.dev"))
-                .url(Some("https://github.com/ankarhem"))
-                .build(),
-        ))
         .build();
 
     let state = AppState::new();
@@ -97,8 +81,9 @@ async fn main() {
     let app = Router::new()
         .merge(SwaggerUi::new("/swagger").url("/api-docs/openapi.json", openapi))
         .route("/api-docs", get(redocly))
-        .route("/", get(redirect_to_swagger_ui))
         .route("/__healthcheck", get(healthcheck))
+        .route("/favicon.png", get(favicon))
+        .route("/", get(redirect_to_swagger_ui))
         .route("/api/v1/worlds", get(v1::worlds::list_worlds))
         .route("/api/v1/worlds/:name", get(v1::worlds::get_world_details))
         .route(
@@ -132,6 +117,29 @@ async fn redocly() -> Html<String> {
     Html::from(html)
 }
 
+async fn favicon() -> &'static [u8] {
+    include_bytes!("../static/favicon.png")
+}
+
+const API_DESCRIPTION: &'static str = r#"
+<div style="display: flex; align-items: center; gap: 2rem;">
+<img src="/favicon.png" alt="Sorcerer asset" width="150" height="150">
+<h1 style="margin: 0; font-size: 2.5rem;">Tibia API</h1>
+</div>
+
+This is a helper API for grabbing the data available on the [Tibia](https://www.tibia.com/) website, written in [Rust](https://www.rust-lang.org/). It is primarily a way for me to test out Rust and its ecosystem, but feel free to use it.
+
+The source code is available on [GitHub](https://github.com/ankarhem/tibia-api-rust).
+
+Contact me at [jakob@ankarhem.dev](mailto:jakob@ankarhem.dev), or raise an issue on [GitHub](https://github.com/ankarhem/tibia-api-rust/issues).
+
+<h2>Disclaimer</h2>
+
+The data is based on [tibia.com](https://www.tibia.com/), the only official Tibia website.
+
+Tibia is a registered trademark of [CipSoft GmbH](https://www.cipsoft.com/en/). Tibia and all products related to Tibia are copyright by [CipSoft GmbH](https://www.cipsoft.com/en/).
+"#;
+
 const REDOCLY_HTML: &'static str = r#"
 <!DOCTYPE html>
 <html>
@@ -140,6 +148,7 @@ const REDOCLY_HTML: &'static str = r#"
     <!-- needed for adaptive design -->
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="/favicon.png">
     <link
       href="https://fonts.googleapis.com/css?family=Montserrat:300,400,700|Roboto:300,400,700"
       rel="stylesheet"
