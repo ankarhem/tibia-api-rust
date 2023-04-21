@@ -1,2 +1,4 @@
 Dockerfile
 http-cacache
+.github
+.DS_Store
