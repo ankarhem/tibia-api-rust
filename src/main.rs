@@ -55,7 +55,11 @@ Tibia is a registered trademark of [CipSoft GmbH](https://www.cipsoft.com/en/). 
 async fn main() {
     #[derive(OpenApi)]
     #[openapi(
-        paths(v1::worlds::list_worlds, v1::worlds::get_kill_statistics,),
+        paths(
+            v1::worlds::list_worlds,
+            v1::worlds::get_kill_statistics,
+            v1::worlds::get_world_details
+        ),
         components(schemas(
             ApiError,
             tibia_api::WorldsData,
@@ -66,7 +70,10 @@ async fn main() {
             tibia_api::PvpType,
             tibia_api::MonsterStats,
             tibia_api::KillStatistics,
-            tibia_api::MonsterStats
+            tibia_api::MonsterStats,
+            tibia_api::Vocation,
+            tibia_api::Player,
+            tibia_api::WorldDetails,
         )),
         tags((name = "Worlds", description = "World related endpoints"))
     )]
@@ -92,11 +99,12 @@ async fn main() {
         .route("/api-docs", get(redocly))
         .route("/", get(redirect_to_swagger_ui))
         .route("/__healthcheck", get(healthcheck))
+        .route("/api/v1/worlds", get(v1::worlds::list_worlds))
+        .route("/api/v1/worlds/:name", get(v1::worlds::get_world_details))
         .route(
             "/api/v1/worlds/:name/kill-statistics",
             get(v1::worlds::get_kill_statistics),
-        )
-        .route("/api/v1/worlds", get(v1::worlds::list_worlds));
+        );
 
     let server = axum::Server::bind(&"0.0.0.0:7032".parse().unwrap())
         .serve(app.with_state(state).into_make_service());
