@@ -64,6 +64,7 @@ async fn main() {
             tibia_api::PvpType,
             tibia_api::MonsterStats,
             tibia_api::KillStatistics,
+            tibia_api::MonsterStats
         )),
         tags((name = "Worlds", description = "World related endpoints"))
     )]
