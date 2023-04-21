@@ -10,8 +10,8 @@ use utoipa::ToSchema;
 #[derive(Serialize, Clone, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct KillStatistics {
-    killed_players: i32,
-    killed_by_players: i32,
+    killed_players: u32,
+    killed_by_players: u32,
 }
 
 #[derive(Serialize, ToSchema)]
@@ -77,15 +77,6 @@ pub fn scrape_kill_statistics(page: &str) -> Result<Vec<MonsterStats>> {
 
 #[derive(Serialize, Debug, ToSchema)]
 #[serde(rename_all = "camelCase")]
-pub enum WorldTag {
-    Blocked,
-    Premium,
-    Experimental,
-    Locked,
-}
-
-#[derive(Serialize, Debug, ToSchema)]
-#[serde(rename_all = "camelCase")]
 pub enum PvpType {
     Open,
     Optional,
@@ -98,7 +89,7 @@ pub enum PvpType {
 pub struct ParsePvpError;
 
 impl FromStr for PvpType {
-    type Err = ParsePvpError;
+    type Err = ParseError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let string = s.to_string();
@@ -108,29 +99,68 @@ impl FromStr for PvpType {
             "Hardcore PvP" => Ok(PvpType::Hardcore),
             "Retro Open PvP" => Ok(PvpType::RetroOpen),
             "Retro Hardcore PvP" => Ok(PvpType::RetroHardcore),
-            _ => Err(ParsePvpError),
+            _ => Err(ParseError::NoneValueReceived),
         }
     }
 }
 
 #[derive(Serialize, Debug, ToSchema)]
 #[serde(rename_all = "camelCase")]
+pub enum Location {
+    Europe,
+    SouthAmerica,
+    NorthAmerica,
+}
+
+impl FromStr for Location {
+    type Err = ParseError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let string = s.to_string();
+        match string.as_str() {
+            "Europe" => Ok(Location::Europe),
+            "North America" => Ok(Location::NorthAmerica),
+            "South America" => Ok(Location::SouthAmerica),
+            _ => Err(ParseError::NoneValueReceived),
+        }
+    }
+}
+
+#[derive(Debug, Serialize, ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub enum GameWorldType {
+    Regular,
+    Experimental,
+}
+
+#[derive(Debug, Serialize, ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub enum TransferType {
+    Blocked,
+    Locked,
+    Open,
+}
+
+#[derive(Serialize, Debug, ToSchema)]
+#[serde(rename_all = "camelCase")]
 pub struct World {
     name: String,
-    online: i32,
-    location: String,
+    online: u32,
+    location: Location,
     pvp_type: String,
     battl_eye: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
     battl_eye_date: Option<String>,
-    tags: Vec<WorldTag>,
+    premium_required: bool,
+    transfer_type: TransferType,
+    game_world_type: GameWorldType,
 }
 
 #[derive(Serialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct WorldsData {
-    players_online: i32,
-    record_players: i32,
+    players_online: u32,
+    record_players: u32,
     record_date: String,
     worlds: Vec<World>,
 }
@@ -175,7 +205,7 @@ pub fn scrape_worlds(page: &str) -> Result<WorldsData> {
         let record_players = &record_html[record_players_start..record_players_end]
             .replace("&nbsp;", " ")
             .replace(",", "");
-        let record_players = record_players.trim().parse::<i32>()?;
+        let record_players = record_players.trim().parse::<u32>()?;
         worlds_data.record_players = record_players;
 
         // WORLDS
@@ -199,23 +229,24 @@ pub fn scrape_worlds(page: &str) -> Result<WorldsData> {
             cells.next(),
             cells.next(),
         ) {
-            let mut tags: Vec<WorldTag> = vec![];
-            let tags_string = additional_information.inner_html();
-            if tags_string.contains("blocked") {
-                tags.push(WorldTag::Blocked)
-            }
-            if tags_string.contains("premium") {
-                tags.push(WorldTag::Premium)
-            }
-            if tags_string.contains("experimental") {
-                tags.push(WorldTag::Experimental)
-            }
-            if tags_string.contains("locked") {
-                tags.push(WorldTag::Locked)
-            }
-
             let battl_eye_selector =
                 Selector::parse(".HelperDivIndicator").expect("Invalid selector for battl eye");
+            let additional_information = additional_information.inner_html();
+
+            let game_world_type = if additional_information.contains("experimental") {
+                GameWorldType::Experimental
+            } else {
+                GameWorldType::Regular
+            };
+
+            let premium_required = additional_information.contains("premium");
+            let transfer_type = if additional_information.contains("blocked") {
+                TransferType::Blocked
+            } else if additional_information.contains("Locked") {
+                TransferType::Locked
+            } else {
+                TransferType::Open
+            };
 
             let world = World {
                 name: name
@@ -224,7 +255,7 @@ pub fn scrape_worlds(page: &str) -> Result<WorldsData> {
                     .ok_or(anyhow!("Could not parse world name"))?
                     .inner_html(),
                 online: online.inner_html().parse()?,
-                location: location.inner_html(),
+                location: location.inner_html().parse()?,
                 pvp_type: pvp_type.inner_html().parse()?,
                 battl_eye: battl_eye.inner_html().len() > 0,
                 battl_eye_date: battl_eye
@@ -246,8 +277,9 @@ pub fn scrape_worlds(page: &str) -> Result<WorldsData> {
                         })
                     })
                     .flatten(),
-
-                tags,
+                premium_required,
+                game_world_type,
+                transfer_type,
             };
 
             worlds_data.worlds.push(world);
@@ -256,7 +288,7 @@ pub fn scrape_worlds(page: &str) -> Result<WorldsData> {
         return Err(anyhow!("Could not parse world tables"));
     }
 
-    let players_online: i32 = worlds_data.worlds.iter().map(|w| w.online).sum();
+    let players_online: u32 = worlds_data.worlds.iter().map(|w| w.online).sum();
     worlds_data.players_online = players_online;
 
     Ok(worlds_data)

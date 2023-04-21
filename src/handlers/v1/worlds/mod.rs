@@ -13,7 +13,7 @@ const COMMUNITY_URL: &'static str = "https://www.tibia.com/community/";
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct PathParams {
-    world_name: String,
+    name: String,
 }
 
 /// List all worlds.
@@ -62,13 +62,64 @@ pub async fn list_worlds(State(state): State<AppState>) -> Result<Response, ApiE
     }
 }
 
+/// Show details for a world.
+///
+#[utoipa::path(
+    get,
+    path = "/api/v1/worlds/{name}",
+    responses(
+        (status = 200, description = "Shows all details about a world", body = WorldsData),
+        (status = 500, description = "Internal server error", body = ApiError),
+    ),
+    tag = "Worlds"
+)]
+#[axum::debug_handler]
+pub async fn get_world_details(
+    State(state): State<AppState>,
+    Path(path_params): Path<PathParams>,
+) -> Result<Response, ApiError> {
+    let client = state.client;
+
+    let mut params = HashMap::new();
+    params.insert("subtopic", "worlds");
+    params.insert("world", &path_params.name);
+    let response = client
+        .get(COMMUNITY_URL)
+        .query(&params)
+        .send()
+        .await
+        .map_err(|_| ApiError::internal_server_error("Could not connect to tibia.com"))?;
+
+    let page_as_str = response.text().await.map_err(|_| {
+        ApiError::internal_server_error("Could not decode source response body from tibia.com")
+    })?;
+
+    let world_details = tibia_api::scrape_worlds(&page_as_str);
+
+    match world_details {
+        Ok(world_details) => {
+            let json = Json(world_details);
+            Ok(json.into_response())
+        }
+        Err(e) => match e.downcast_ref() {
+            Some(tibia_api::ParseError::Is404) => Err(ApiError::not_found("World not found")),
+            Some(tibia_api::ParseError::NoneValueReceived) => Err(ApiError::internal_server_error(
+                "Unable to parse unexpected response from tibia.com",
+            )),
+            _ => Err(ApiError::internal_server_error(
+                "Failed to scrape source data",
+            )),
+        },
+    }
+}
+
 /// List all killstatistics for a world.
 ///
 #[utoipa::path(
     get,
-    path = "/api/v1/worlds/{world_name}/kill-statistics",
+    path = "/api/v1/worlds/{name}/kill-statistics",
     responses(
-        (status = 200, description = "List all kill statistics for `{world_name}`", body = [MonsterStats]),
+        (status = 200, description = "List all kill statistics for `{name}`", body = [MonsterStats]),
         (status = 404, description = "World not found", body = ApiError),
         (status = 500, description = "Internal server error", body = ApiError),
     ),
@@ -84,7 +135,7 @@ pub async fn get_kill_statistics(
     // Form data
     let mut params = HashMap::new();
     params.insert("subtopic", "killstatistics");
-    params.insert("world", &path_params.world_name);
+    params.insert("world", &path_params.name);
 
     let response = client
         .get(COMMUNITY_URL)

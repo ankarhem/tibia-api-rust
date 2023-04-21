@@ -60,7 +60,9 @@ async fn main() {
             ApiError,
             tibia_api::WorldsData,
             tibia_api::World,
-            tibia_api::WorldTag,
+            tibia_api::GameWorldType,
+            tibia_api::TransferType,
+            tibia_api::Location,
             tibia_api::PvpType,
             tibia_api::MonsterStats,
             tibia_api::KillStatistics,
@@ -91,7 +93,7 @@ async fn main() {
         .route("/", get(redirect_to_swagger_ui))
         .route("/__healthcheck", get(healthcheck))
         .route(
-            "/api/v1/worlds/:world_name/kill-statistics",
+            "/api/v1/worlds/:name/kill-statistics",
             get(v1::worlds::get_kill_statistics),
         )
         .route("/api/v1/worlds", get(v1::worlds::list_worlds));
