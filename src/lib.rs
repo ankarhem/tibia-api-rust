@@ -142,7 +142,6 @@ pub enum GameWorldType {
 pub enum TransferType {
     Blocked,
     Locked,
-    Open,
 }
 
 #[serde_with::skip_serializing_none]
@@ -156,7 +155,7 @@ pub struct World {
     battl_eye: bool,
     battl_eye_date: Option<String>,
     premium_required: bool,
-    transfer_type: TransferType,
+    transfer_type: Option<TransferType>,
     game_world_type: GameWorldType,
 }
 
@@ -255,11 +254,11 @@ pub fn scrape_worlds(page: &str) -> Result<WorldsData> {
 
             let premium_required = additional_information.contains("premium");
             let transfer_type = if additional_information.contains("blocked") {
-                TransferType::Blocked
+                Some(TransferType::Blocked)
             } else if additional_information.contains("Locked") {
-                TransferType::Locked
+                Some(TransferType::Locked)
             } else {
-                TransferType::Open
+                None
             };
 
             let world = World {
@@ -370,7 +369,7 @@ pub struct WorldDetails {
     battl_eye: bool,
     battl_eye_date: Option<String>,
     game_world_type: GameWorldType,
-    transfer_type: TransferType,
+    transfer_type: Option<TransferType>,
     premium_required: bool,
     players_online: Vec<Player>,
 }
@@ -415,7 +414,7 @@ pub fn scrape_world_details(page: &str) -> Result<WorldDetails> {
             battl_eye: false,
             battl_eye_date: None,
             game_world_type: GameWorldType::Regular,
-            transfer_type: TransferType::Open,
+            transfer_type: None,
             premium_required: false,
             players_online: vec![],
         };
@@ -525,10 +524,10 @@ pub fn scrape_world_details(page: &str) -> Result<WorldDetails> {
                 }
                 "Transfer Type:" => match value.inner_html().as_str() {
                     "locked" => {
-                        world_details.transfer_type = TransferType::Locked;
+                        world_details.transfer_type = Some(TransferType::Locked);
                     }
                     "blocked" => {
-                        world_details.transfer_type = TransferType::Blocked;
+                        world_details.transfer_type = Some(TransferType::Blocked);
                     }
                     other_strings => {
                         return Err(ParseError::UnexpectedPageContent(format!(
@@ -575,8 +574,6 @@ pub fn scrape_world_details(page: &str) -> Result<WorldDetails> {
             Selector::parse("tr.Odd > td, tr.Even > td").expect("Invalid selector for player cell");
         let mut player_cells = players_online_table.select(&player_cell_selector);
 
-        // println!("{}", player_cells.next().unwrap().inner_html());
-
         while let (Some(name), Some(level), Some(vocation)) = (
             player_cells.next(),
             player_cells.next(),
@@ -618,18 +615,39 @@ pub struct Guild {
 pub fn scrape_guilds(page: &str) -> Result<Vec<Guild>> {
     let document = scraper::Html::parse_document(&page);
 
-    let guild_tables_selector =
-        Selector::parse(".TableContentContainer").expect("Invalid selector for guild tables");
-    let guild_tables = document.select(&guild_tables_selector);
+    let main_content =
+        Selector::parse(".main-content #guilds").expect("Invalid selector for main content");
+    let main_content =
+        document
+            .select(&main_content)
+            .next()
+            .ok_or(ParseError::UnexpectedPageContent(format!(
+                "Unexpected page content when trying to parse main content"
+            )))?;
+
+    let tables_selector =
+        Selector::parse(".InnerTableContainer").expect("Invalid selector for worlds table");
+    let mut tables = main_content.select(&tables_selector);
+
+    if tables.clone().count() == 1 {
+        return Err(ParseError::Is404.into());
+    }
 
     let row_selector = Selector::parse("tr:not(:first-child)").expect("Invalid selector for rows");
     let cell_selector = Selector::parse("td").expect("Invalid selector for cells");
     let img_selector = Selector::parse("img").expect("Invalid selector for guild logo");
 
     let mut guilds = vec![];
-    let mut active = true;
-    for table in guild_tables {
-        for row in table.select(&row_selector) {
+
+    for i in 0..2 {
+        let table = tables
+            .next()
+            .ok_or(ParseError::UnexpectedPageContent(format!(
+                "Unexpected page content when trying to parse table",
+            )))?;
+
+        let rows = table.select(&row_selector);
+        for row in rows {
             let mut cells = row.select(&cell_selector);
             if let (Some(logo), Some(name_description), Some(_)) =
                 (cells.next(), cells.next(), cells.next())
@@ -656,7 +674,7 @@ pub fn scrape_guilds(page: &str) -> Result<Vec<Guild>> {
                     logo,
                     name,
                     description,
-                    active,
+                    active: i == 0,
                 });
             } else {
                 return Err(
@@ -664,9 +682,6 @@ pub fn scrape_guilds(page: &str) -> Result<Vec<Guild>> {
                 );
             }
         }
-        // first table == active guilds,
-        // second table == guilds in formation
-        active = false;
     }
 
     Ok(guilds)

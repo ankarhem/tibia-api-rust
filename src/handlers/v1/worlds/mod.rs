@@ -203,6 +203,7 @@ pub async fn get_world_guilds(
         ApiError::internal_server_error("Could not decode source response body from tibia.com")
     })?;
 
+    println!("{page_as_str}");
     let guilds = tibia_api::scrape_guilds(&page_as_str);
 
     match guilds {
