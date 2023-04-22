@@ -46,6 +46,9 @@ impl AppState {
 async fn main() {
     #[derive(OpenApi)]
     #[openapi(
+        servers(
+            (url = "https://tibia.ankarhem.dev"),
+        ),
         paths(
             v1::worlds::list_worlds,
             v1::worlds::get_world_kill_statistics,
