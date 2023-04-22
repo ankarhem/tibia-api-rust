@@ -87,13 +87,16 @@ async fn main() {
         .route("/favicon.png", get(favicon))
         .route("/", get(redirect_to_swagger_ui))
         .route("/api/v1/worlds", get(v1::worlds::list_worlds))
-        .route("/api/v1/worlds/:name", get(v1::worlds::get_world_details))
         .route(
-            "/api/v1/worlds/:name/guilds",
+            "/api/v1/worlds/:world_name",
+            get(v1::worlds::get_world_details),
+        )
+        .route(
+            "/api/v1/worlds/:world_name/guilds",
             get(v1::worlds::get_world_guilds),
         )
         .route(
-            "/api/v1/worlds/:name/kill-statistics",
+            "/api/v1/worlds/:world_name/kill-statistics",
             get(v1::worlds::get_world_kill_statistics),
         );
 

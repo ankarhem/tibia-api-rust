@@ -13,7 +13,7 @@ const COMMUNITY_URL: &'static str = "https://www.tibia.com/community/";
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct PathParams {
-    name: String,
+    world_name: String,
 }
 
 /// List all worlds.
@@ -22,8 +22,8 @@ pub struct PathParams {
     get,
     path = "/api/v1/worlds",
     responses(
-        (status = 200, description = "Object containing a list of worlds and some metadata", body = WorldsData),
-        (status = 500, description = "Internal server error", body = ApiError),
+        (status = 200, description = "Success", body = WorldsData),
+        (status = 500, description = "Internal Server Error", body = ApiError),
     ),
     tag = "Worlds"
 )]
@@ -66,11 +66,14 @@ pub async fn list_worlds(State(state): State<AppState>) -> Result<Response, ApiE
 ///
 #[utoipa::path(
     get,
-    path = "/api/v1/worlds/{name}",
+    path = "/api/v1/worlds/{world_name}",
+    params(
+        ("world_name" = String, Path, description = "World name", example = "Antica")
+    ),
     responses(
-        (status = 200, description = "Detailed information about a world", body = WorldDetails),
-        (status = 404, description = "World not found", body = ApiError),
-        (status = 500, description = "Internal server error", body = ApiError),
+        (status = 200, description = "Success", body = WorldDetails),
+        (status = 404, description = "Not Found", body = ApiError),
+        (status = 500, description = "Internal Server Error", body = ApiError),
     ),
     tag = "Worlds"
 )]
@@ -83,7 +86,7 @@ pub async fn get_world_details(
 
     let mut params = HashMap::new();
     params.insert("subtopic", "worlds");
-    params.insert("world", &path_params.name);
+    params.insert("world", &path_params.world_name);
     let response = client
         .get(COMMUNITY_URL)
         .query(&params)
@@ -118,11 +121,14 @@ pub async fn get_world_details(
 ///
 #[utoipa::path(
     get,
-    path = "/api/v1/worlds/{name}/kill-statistics",
+    path = "/api/v1/worlds/{world_name}/kill-statistics",
+    params(
+        ("world_name" = String, Path, description = "World name", example = "Antica")
+    ),
     responses(
-        (status = 200, description = "List of killstatistics", body = [MonsterStats]),
-        (status = 404, description = "World not found", body = ApiError),
-        (status = 500, description = "Internal server error", body = ApiError),
+        (status = 200, description = "Success", body = [MonsterStats]),
+        (status = 404, description = "Not Found", body = ApiError),
+        (status = 500, description = "Internal Server Error", body = ApiError),
     ),
     tag = "Worlds"
 )]
@@ -136,7 +142,7 @@ pub async fn get_world_kill_statistics(
     // Form data
     let mut params = HashMap::new();
     params.insert("subtopic", "killstatistics");
-    params.insert("world", &path_params.name);
+    params.insert("world", &path_params.world_name);
 
     let response = client
         .get(COMMUNITY_URL)
@@ -172,11 +178,14 @@ pub async fn get_world_kill_statistics(
 ///
 #[utoipa::path(
     get,
-    path = "/api/v1/worlds/{name}/guilds",
+    path = "/api/v1/worlds/{world_name}/guilds",
+    params(
+        ("world_name" = String, Path, description = "World name", example = "Antica")
+    ),
     responses(
-        (status = 200, description = "List of guilds", body = [Guild]),
-        (status = 404, description = "World not found", body = ApiError),
-        (status = 500, description = "Internal server error", body = ApiError),
+        (status = 200, description = "Success", body = [Guild]),
+        (status = 404, description = "Not Found", body = ApiError),
+        (status = 500, description = "Internal Server Error", body = ApiError),
     ),
     tag = "Worlds"
 )]
@@ -190,7 +199,7 @@ pub async fn get_world_guilds(
     // Form data
     let mut params = HashMap::new();
     params.insert("subtopic", "guilds");
-    params.insert("world", &path_params.name);
+    params.insert("world", &path_params.world_name);
 
     let response = client
         .get(COMMUNITY_URL)
