@@ -105,6 +105,7 @@ pub struct WorldsData {
 ///
 #[utoipa::path(
     get,
+    operation_id = "get_worlds",
     path = "/api/v1/worlds",
     responses(
         (status = 200, description = "Success", body = WorldsData),
@@ -114,7 +115,6 @@ pub struct WorldsData {
 )]
 #[axum::debug_handler]
 pub async fn handler(State(state): State<AppState>) -> Result<Json<WorldsData>> {
-    println!("GET /api/v1/worlds");
     let client = state.client;
 
     let mut params = HashMap::new();

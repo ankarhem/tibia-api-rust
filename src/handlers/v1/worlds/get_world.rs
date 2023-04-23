@@ -79,6 +79,7 @@ pub struct WorldDetails {
 ///
 #[utoipa::path(
     get,
+    operation_id = "get_world",
     path = "/api/v1/worlds/{world_name}",
     params(
         ("world_name" = String, Path, description = "World name", example = "Antica")

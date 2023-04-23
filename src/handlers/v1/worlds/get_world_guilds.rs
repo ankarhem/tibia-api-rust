@@ -4,7 +4,7 @@ use axum::{
     extract::{Path, State},
     Json,
 };
-use scraper::Selector;
+use scraper::{ElementRef, Selector};
 use serde::Serialize;
 use serde_with::skip_serializing_none;
 use utoipa::ToSchema;
@@ -27,6 +27,7 @@ pub struct Guild {
 ///
 #[utoipa::path(
     get,
+    operation_id = "get_world_guilds",
     path = "/api/v1/worlds/{world_name}/guilds",
     params(
         ("world_name" = String, Path, description = "World name", example = "Antica")
@@ -64,12 +65,17 @@ pub async fn handler(
 
     let tibia_page = TibiaPage::new(&page_as_str);
     let tables = tibia_page.get_tables()?;
-    let mut tables = tables.iter().filter(|t| {
-        t.value()
-            .has_class("TableContent", scraper::CaseSensitivity::CaseSensitive)
-    });
+    let tables: Vec<&ElementRef> = tables
+        .iter()
+        .filter(|t| {
+            t.value()
+                .has_class("TableContent", scraper::CaseSensitivity::CaseSensitive)
+        })
+        .collect();
 
-    println!("{:#?}", tables);
+    if tables.len() != 2 {
+        return Err(ServerError::ScrapeIs404Page);
+    }
 
     let mut guilds = vec![];
 
@@ -79,6 +85,7 @@ pub async fn handler(
 
     for i in 0..2 {
         let table = tables
+            .iter()
             .next()
             .ok_or(ServerError::ScrapeUnexpectedPageContent)?;
 

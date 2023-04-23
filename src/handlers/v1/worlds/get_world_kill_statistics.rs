@@ -31,6 +31,7 @@ pub struct MonsterKillStatistics {
 ///
 #[utoipa::path(
     get,
+    operation_id = "get_world_kill_statistics",
     path = "/api/v1/worlds/{world_name}/kill-statistics",
     params(
         ("world_name" = String, Path, description = "World name", example = "Antica")
