@@ -75,8 +75,9 @@ async fn main() {
             v1::worlds::get_world::Player,
             v1::worlds::get_world::Vocation,
             v1::worlds::get_world::WorldDetails,
-            v1::worlds::get_world_kill_statistics::MonsterKillStatistics,
             v1::worlds::get_world_kill_statistics::KillStatistics,
+            v1::worlds::get_world_kill_statistics::RaceKillStatistics,
+            v1::worlds::get_world_kill_statistics::KilledAmounts,
             v1::worlds::get_world_guilds::Guild,
         )),
         tags((name = "Worlds", description = "World related endpoints"))

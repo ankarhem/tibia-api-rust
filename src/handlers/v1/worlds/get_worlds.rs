@@ -81,12 +81,16 @@ pub enum TransferType {
 #[derive(Serialize, Debug, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct World {
+    #[schema(example = "Antica")]
     name: String,
+    #[schema(example = "1337")]
     players_online: u32,
     location: Location,
-    pvp_type: String,
+    pvp_type: PvpType,
+    #[schema(example = true)]
     battl_eye: bool,
     battl_eye_date: Option<String>,
+    #[schema(example = false)]
     premium_required: bool,
     transfer_type: Option<TransferType>,
     game_world_type: GameWorldType,

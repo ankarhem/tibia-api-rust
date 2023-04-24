@@ -14,17 +14,25 @@ use super::{PathParams, COMMUNITY_URL};
 
 #[derive(Debug, Serialize, Clone, ToSchema)]
 #[serde(rename_all = "camelCase")]
-pub struct KillStatistics {
+pub struct KilledAmounts {
     killed_players: u32,
     killed_by_players: u32,
 }
 
 #[derive(Debug, Serialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
-pub struct MonsterKillStatistics {
-    name: String,
-    last_day: KillStatistics,
-    last_week: KillStatistics,
+pub struct RaceKillStatistics {
+    race: String,
+    last_day: KilledAmounts,
+    last_week: KilledAmounts,
+}
+
+#[derive(Debug, Serialize, ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct KillStatistics {
+    total_last_day: KilledAmounts,
+    total_last_week: KilledAmounts,
+    races: Vec<RaceKillStatistics>,
 }
 
 /// List killstatistics for a world.
@@ -37,7 +45,7 @@ pub struct MonsterKillStatistics {
         ("world_name" = String, Path, description = "World name", example = "Antica")
     ),
     responses(
-        (status = 200, description = "Success", body = [MonsterKillStatistics]),
+        (status = 200, description = "Success", body = [KillStatistics]),
         (status = 404, description = "Not Found", body = ClientError),
         (status = 500, description = "Internal Server Error", body = ClientError),
     ),
@@ -47,7 +55,7 @@ pub struct MonsterKillStatistics {
 pub async fn handler(
     State(state): State<AppState>,
     Path(path_params): Path<PathParams>,
-) -> Result<Json<Vec<MonsterKillStatistics>>> {
+) -> Result<Json<KillStatistics>> {
     let client = state.client;
 
     // Form data
@@ -78,13 +86,20 @@ pub async fn handler(
         .map(|cell| cell.inner_html())
         .collect::<Vec<String>>();
 
-    if cells.len() == 0 {
-        return Err(ServerError::ScrapeIs404Page);
-    }
-
     let mut iter = cells.iter();
 
-    let mut stats: Vec<MonsterKillStatistics> = vec![];
+    let mut stats: KillStatistics = KillStatistics {
+        races: vec![],
+        total_last_day: KilledAmounts {
+            killed_players: 0,
+            killed_by_players: 0,
+        },
+        total_last_week: KilledAmounts {
+            killed_players: 0,
+            killed_by_players: 0,
+        },
+    };
+
     while let (Some(name), Some(kp_day), Some(kbp_day), Some(kp_week), Some(kbp_week)) = (
         iter.next(),
         iter.next(),
@@ -92,18 +107,31 @@ pub async fn handler(
         iter.next(),
         iter.next(),
     ) {
-        let last_day = KillStatistics {
+        if name == "Total" {
+            stats.total_last_day = KilledAmounts {
+                killed_players: kp_day.parse()?,
+                killed_by_players: kbp_day.parse()?,
+            };
+
+            stats.total_last_week = KilledAmounts {
+                killed_players: kp_week.parse()?,
+                killed_by_players: kbp_week.parse()?,
+            };
+            continue;
+        }
+
+        let last_day = KilledAmounts {
             killed_players: kp_day.parse()?,
             killed_by_players: kbp_day.parse()?,
         };
 
-        let last_week = KillStatistics {
+        let last_week = KilledAmounts {
             killed_players: kp_week.parse()?,
             killed_by_players: kbp_week.parse()?,
         };
 
-        stats.push(MonsterKillStatistics {
-            name: name.to_string(),
+        stats.races.push(RaceKillStatistics {
+            race: name.to_string(),
             last_day,
             last_week,
         })
