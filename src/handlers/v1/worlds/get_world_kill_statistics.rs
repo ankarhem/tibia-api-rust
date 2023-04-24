@@ -45,7 +45,7 @@ pub struct KillStatistics {
         ("world_name" = String, Path, description = "World name", example = "Antica")
     ),
     responses(
-        (status = 200, description = "Success", body = [KillStatistics]),
+        (status = 200, description = "Success", body = KillStatistics),
         (status = 404, description = "Not Found", body = ClientError),
         (status = 500, description = "Internal Server Error", body = ClientError),
     ),
