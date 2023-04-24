@@ -87,7 +87,6 @@ pub struct World {
     players_online: u32,
     location: Location,
     pvp_type: PvpType,
-    #[schema(example = true)]
     battl_eye: bool,
     battl_eye_date: Option<String>,
     #[schema(example = false)]

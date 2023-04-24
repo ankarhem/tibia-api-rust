@@ -50,7 +50,9 @@ impl FromStr for Vocation {
 #[derive(Debug, Serialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct Player {
+    #[schema(example = "Urinchoklad")]
     name: String,
+    #[schema(example = "52")]
     level: u32,
     vocation: Option<Vocation>,
 }
@@ -60,12 +62,15 @@ pub struct Player {
 #[serde(rename_all = "camelCase")]
 pub struct WorldDetails {
     is_online: bool,
+    #[schema(example = "152")]
     players_online_count: u32,
+    #[schema(example = "1211")]
     players_online_record: u32,
     players_online_record_date: String,
     creation_date: String,
     location: Location,
     pvp_type: PvpType,
+    #[schema(example = json!(["Rise of Devovorga", "The Lightbearer"]))]
     world_quest_titles: Vec<String>,
     battl_eye: bool,
     battl_eye_date: Option<String>,
