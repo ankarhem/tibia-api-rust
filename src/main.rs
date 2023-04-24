@@ -1,20 +1,28 @@
 use std::collections::HashMap;
 
+pub use self::error::{Result, ServerError};
+pub use self::tibia_page::TibiaPage;
+
 use axum::{
+    extract::FromRef,
     response::{Html, IntoResponse, Redirect, Response},
     routing::get,
     Json, Router,
 };
+use tower_http::services::ServeDir;
+
 use utoipa::{openapi::InfoBuilder, OpenApi};
 use utoipa_swagger_ui::SwaggerUi;
 
 use http_cache_reqwest::{CACacheManager, Cache, CacheMode, HttpCache};
 use reqwest_middleware::{ClientBuilder, ClientWithMiddleware};
 
+mod error;
 mod handlers;
-pub use crate::handlers::{v1, ApiError};
+mod tibia_page;
+pub use crate::handlers::v1;
 
-#[derive(Clone)]
+#[derive(Debug, Clone, FromRef)]
 pub struct AppState {
     client: ClientWithMiddleware,
 }
@@ -50,26 +58,27 @@ async fn main() {
             (url = "https://tibia.ankarhem.dev"),
         ),
         paths(
-            v1::worlds::list_worlds,
-            v1::worlds::get_world_kill_statistics,
-            v1::worlds::get_world_details,
-            v1::worlds::get_world_guilds
+            v1::worlds::get_worlds::handler,
+            v1::worlds::get_world::handler,
+            v1::worlds::get_world_kill_statistics::handler,
+            v1::worlds::get_world_guilds::handler
         ),
         components(schemas(
-            ApiError,
-            tibia_api::WorldsData,
-            tibia_api::World,
-            tibia_api::GameWorldType,
-            tibia_api::TransferType,
-            tibia_api::Location,
-            tibia_api::PvpType,
-            tibia_api::MonsterStats,
-            tibia_api::KillStatistics,
-            tibia_api::MonsterStats,
-            tibia_api::Vocation,
-            tibia_api::Player,
-            tibia_api::WorldDetails,
-            tibia_api::Guild
+            error::ClientErrorCode,
+            error::ClientError,
+            v1::worlds::get_worlds::WorldsData,
+            v1::worlds::get_worlds::World,
+            v1::worlds::get_worlds::GameWorldType,
+            v1::worlds::get_worlds::TransferType,
+            v1::worlds::get_worlds::Location,
+            v1::worlds::get_worlds::PvpType,
+            v1::worlds::get_world::Player,
+            v1::worlds::get_world::Vocation,
+            v1::worlds::get_world::WorldDetails,
+            v1::worlds::get_world_kill_statistics::KillStatistics,
+            v1::worlds::get_world_kill_statistics::RaceKillStatistics,
+            v1::worlds::get_world_kill_statistics::KilledAmounts,
+            v1::worlds::get_world_guilds::Guild,
         )),
         tags((name = "Worlds", description = "World related endpoints"))
     )]
@@ -83,28 +92,19 @@ async fn main() {
 
     let state = AppState::new();
 
+    let static_service = ServeDir::new("static");
+
     let app = Router::new()
         .merge(SwaggerUi::new("/swagger").url("/api-docs/openapi.json", openapi))
         .route("/api-docs", get(redocly))
         .route("/__healthcheck", get(healthcheck))
-        .route("/favicon.png", get(favicon))
         .route("/", get(redirect_to_swagger_ui))
-        .route("/api/v1/worlds", get(v1::worlds::list_worlds))
-        .route(
-            "/api/v1/worlds/:world_name",
-            get(v1::worlds::get_world_details),
-        )
-        .route(
-            "/api/v1/worlds/:world_name/guilds",
-            get(v1::worlds::get_world_guilds),
-        )
-        .route(
-            "/api/v1/worlds/:world_name/kill-statistics",
-            get(v1::worlds::get_world_kill_statistics),
-        );
+        .nest("/api", v1::router(state.clone()))
+        .layer(axum::middleware::map_response(main_response_mapper))
+        .fallback_service(static_service);
 
-    let server = axum::Server::bind(&"0.0.0.0:7032".parse().unwrap())
-        .serve(app.with_state(state).into_make_service());
+    let server =
+        axum::Server::bind(&"0.0.0.0:7032".parse().unwrap()).serve(app.into_make_service());
     let addr = server.local_addr();
 
     println!("Listening on {addr}");
@@ -112,25 +112,36 @@ async fn main() {
     server.await.unwrap();
 }
 
+async fn main_response_mapper(res: Response) -> Response {
+    // -- Get the eventual response error.
+    let server_error = res.extensions().get::<ServerError>();
+    let client_status_error = server_error.map(|se| se.into_client_error());
+
+    // -- If client error, build the new reponse.
+    let error_response = client_status_error.map(|ce| ce.into_response());
+
+    if error_response.is_some() {
+        println!("Error: {:?}", error_response);
+    }
+
+    error_response.unwrap_or(res)
+}
+
 async fn redirect_to_swagger_ui() -> Redirect {
     Redirect::temporary("/api-docs")
 }
 
-async fn healthcheck() -> Response {
+async fn healthcheck() -> impl IntoResponse {
     let mut resp = HashMap::new();
     resp.insert("ok", true);
-    Json(resp).into_response()
+    Json(resp)
 }
 
-async fn redocly() -> Html<String> {
+async fn redocly() -> impl IntoResponse {
     let html = REDOCLY_HTML
         .replace("{title}", "Tibia API")
         .replace("{spec_url}", "/api-docs/openapi.json");
     Html::from(html)
-}
-
-async fn favicon() -> &'static [u8] {
-    include_bytes!("../static/favicon.png")
 }
 
 const API_DESCRIPTION: &'static str = r#"
