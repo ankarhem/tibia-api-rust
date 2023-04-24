@@ -3,3 +3,6 @@ run:
 
 test:
     cargo watch -x test
+
+build:
+    cargo build --release

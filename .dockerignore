@@ -2,3 +2,6 @@ Dockerfile
 http-cacache
 .github
 .DS_Store
+.git
+.gitignore
+.github
