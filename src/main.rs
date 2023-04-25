@@ -103,11 +103,15 @@ async fn main() {
         .layer(axum::middleware::map_response(main_response_mapper))
         .fallback_service(static_service);
 
-    let server =
-        axum::Server::bind(&"0.0.0.0:7032".parse().unwrap()).serve(app.into_make_service());
-    let addr = server.local_addr();
-
-    println!("Listening on {addr}");
+    let addr = "0.0.0.0:7032".parse().unwrap();
+    println!("Listening on {}", addr);
+    let server = axum::Server::bind(&addr)
+        .serve(app.into_make_service())
+        .with_graceful_shutdown(async {
+            tokio::signal::ctrl_c()
+                .await
+                .expect("failed to install CTRL+C signal handler");
+        });
 
     server.await.unwrap();
 }
