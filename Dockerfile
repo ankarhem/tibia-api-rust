@@ -12,6 +12,7 @@ RUN cargo build --release
 
 COPY . .
 
+RUN cargo test
 RUN cargo install --path .
 
 FROM rust:1.67
