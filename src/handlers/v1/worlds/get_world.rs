@@ -62,6 +62,7 @@ pub struct Player {
 #[derive(Debug, Serialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct WorldDetails {
+    #[schema(example = "Antica")]
     name: String,
     is_online: bool,
     #[schema(example = "152")]
