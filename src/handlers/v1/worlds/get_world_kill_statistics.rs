@@ -6,21 +6,21 @@ use axum::{
 };
 use capitalize::Capitalize;
 use scraper::Selector;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
 use crate::{AppState, Result, ServerError, TibiaPage};
 
 use super::{PathParams, COMMUNITY_URL};
 
-#[derive(Debug, Serialize, Clone, ToSchema)]
+#[derive(Debug, Serialize, Deserialize, Clone, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct KilledAmounts {
     killed_players: u32,
     killed_by_players: u32,
 }
 
-#[derive(Debug, Serialize, ToSchema)]
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct RaceKillStatistics {
     race: String,
@@ -150,10 +150,11 @@ pub async fn handler(
 mod tests {
     use serde_json::Value;
 
+    use super::RaceKillStatistics;
     use crate::tests::get_path;
 
     #[tokio::test]
-    async fn it_can_parse_world_kill_statistics() {
+    async fn it_can_parse_kill_statistics() {
         let response = get_path("/api/v1/worlds/Antica/kill-statistics").await;
         assert_eq!(response.status(), 200);
 
@@ -165,6 +166,17 @@ mod tests {
             .unwrap();
 
         assert!(killed_players.as_u64().unwrap() > 0);
+        let races_json = received_json.get("races").unwrap();
+        assert!(races_json.is_array());
+        let races: Vec<RaceKillStatistics> = races_json
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|v| serde_json::from_value(v.clone()).unwrap())
+            .collect();
+
+        let total_in_races = races.iter().find(|r| r.race == "Total");
+        assert!(total_in_races.is_none());
     }
 
     #[tokio::test]
