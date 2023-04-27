@@ -4,6 +4,7 @@ use axum::{
     extract::{Path, State},
     Json,
 };
+use capitalize::Capitalize;
 use scraper::{ElementRef, Selector};
 use serde::Serialize;
 use serde_with::skip_serializing_none;
@@ -45,11 +46,12 @@ pub async fn handler(
     Path(path_params): Path<PathParams>,
 ) -> Result<Json<Vec<Guild>>> {
     let client = state.client;
+    let world_name = path_params.world_name.capitalize();
 
     // Form data
     let mut params = HashMap::new();
     params.insert("subtopic", "guilds");
-    params.insert("world", &path_params.world_name);
+    params.insert("world", &world_name);
 
     let response = client
         .get(COMMUNITY_URL)

@@ -20,6 +20,7 @@ use reqwest_middleware::{ClientBuilder, ClientWithMiddleware};
 mod error;
 mod handlers;
 mod tibia_page;
+mod utils;
 pub use crate::handlers::v1;
 
 #[derive(Debug, Clone, FromRef)]

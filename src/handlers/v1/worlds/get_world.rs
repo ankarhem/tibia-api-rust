@@ -2,6 +2,7 @@ use std::{collections::HashMap, str::FromStr};
 
 use axum::extract::{Path, State};
 use axum::Json;
+use capitalize::Capitalize;
 use scraper::Selector;
 use serde::Serialize;
 use utoipa::ToSchema;
@@ -102,10 +103,11 @@ pub async fn handler(
     Path(path_params): Path<PathParams>,
 ) -> Result<Json<WorldDetails>> {
     let client = state.client;
+    let world_name = path_params.world_name.capitalize();
 
     let mut params = HashMap::new();
     params.insert("subtopic", "worlds");
-    params.insert("world", &path_params.world_name);
+    params.insert("world", &world_name);
     let response = client
         .get(COMMUNITY_URL)
         .query(&params)
