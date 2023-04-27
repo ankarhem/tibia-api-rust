@@ -62,6 +62,7 @@ pub struct Player {
 #[derive(Debug, Serialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct WorldDetails {
+    name: String,
     is_online: bool,
     #[schema(example = "152")]
     players_online_count: u32,
@@ -140,6 +141,7 @@ pub async fn handler(
         let mut information_cells = information_table.select(&cell_selector);
 
         let mut world_details = WorldDetails {
+            name: world_name,
             is_online: true,
             players_online_count: 0,
             players_online_record: 0,
