@@ -57,16 +57,16 @@ fn app() -> Router {
 
     let state = AppState::new();
     let static_service = ServeDir::new("static");
-    let app = Router::new()
+    
+
+    Router::new()
         .merge(SwaggerUi::new("/swagger").url("/api-docs/openapi.json", openapi_docs))
         .route("/api-docs", get(redocly::redocly_index))
         .route("/__healthcheck", get(healthcheck))
         .route("/", get(redocly::redirect_redocly))
-        .nest("/api", v1::router(state.clone()))
+        .nest("/api", v1::router(state))
         .layer(axum::middleware::map_response(main_response_mapper))
-        .fallback_service(static_service);
-
-    app
+        .fallback_service(static_service)
 }
 
 #[tokio::main]

@@ -45,7 +45,7 @@ pub fn create_openapi_docs() -> openapi::OpenApi {
     openapi
 }
 
-const API_DESCRIPTION: &'static str = r#"
+const API_DESCRIPTION: &str = r#"
 <div style="display: flex; align-items: center; gap: 2rem;">
 <img src="/favicon.png" alt="Sorcerer asset" width="150" height="150">
 <h1 style="margin: 0; font-size: 2.5rem;">Tibia API</h1>

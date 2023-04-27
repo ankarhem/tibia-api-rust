@@ -11,7 +11,7 @@ pub async fn redocly_index() -> impl IntoResponse {
     Html::from(html)
 }
 
-const REDOCLY_HTML: &'static str = r#"
+const REDOCLY_HTML: &str = r#"
 <!DOCTYPE html>
 <html>
   <head>

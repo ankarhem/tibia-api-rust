@@ -86,9 +86,7 @@ pub async fn handler(
     let img_selector = Selector::parse("img").expect("Invalid selector for guild logo");
 
     for i in 0..2 {
-        let table = tables
-            .iter()
-            .next()
+        let table = tables.first()
             .ok_or(ServerError::ScrapeUnexpectedPageContent)?;
 
         let rows = table.select(&row_selector);
@@ -100,8 +98,7 @@ pub async fn handler(
                 let logo = logo
                     .select(&img_selector)
                     .next()
-                    .map(|img| img.value().attr("src").map(|src| src.to_string()))
-                    .flatten();
+                    .and_then(|img| img.value().attr("src").map(|src| src.to_string()));
 
                 let mut name_description_iterator = name_description.text().take(2);
 
@@ -139,7 +136,7 @@ mod tests {
         assert_eq!(response.status(), 200);
 
         let received_json = response.json::<Value>().await.unwrap();
-        assert_eq!(received_json.is_array(), true);
+        assert!(received_json.is_array());
     }
 
     #[tokio::test]
@@ -148,7 +145,7 @@ mod tests {
         assert_eq!(response.status(), 200);
 
         let received_json = response.json::<Value>().await.unwrap();
-        assert_eq!(received_json.is_array(), true);
+        assert!(received_json.is_array());
     }
 
     #[tokio::test]

@@ -13,7 +13,7 @@ pub struct PathParams {
     world_name: String,
 }
 
-const COMMUNITY_URL: &'static str = "https://www.tibia.com/community/";
+const COMMUNITY_URL: &str = "https://www.tibia.com/community/";
 
 pub fn router(state: AppState) -> Router {
     Router::new()

@@ -172,7 +172,7 @@ pub async fn handler(
                     world_details.is_online = status;
                 }
                 "Players Online:" => {
-                    let value = value.inner_html().replace(",", "");
+                    let value = value.inner_html().replace(',', "");
                     let players_online_count = value
                         .parse()
                         .map_err(|_| ServerError::ScrapeUnexpectedPageContent)?;
@@ -184,7 +184,7 @@ pub async fn handler(
                         .find(" players")
                         .ok_or(ServerError::ScrapeUnexpectedPageContent)?;
 
-                    let players_string = &string[..end_players].to_string().replace(",", "");
+                    let players_string = &string[..end_players].to_string().replace(',', "");
 
                     let players: u32 = players_string
                         .parse()
@@ -196,7 +196,7 @@ pub async fn handler(
                         .ok_or(ServerError::ScrapeUnexpectedPageContent)?
                         + 3;
                     let end_date = string
-                        .find(")")
+                        .find(')')
                         .ok_or(ServerError::ScrapeUnexpectedPageContent)?;
 
                     let date_string = sanitize_string(&string[start_date..end_date]);
@@ -292,9 +292,9 @@ pub async fn handler(
             world_details.players_online.push(player);
         }
 
-        return Ok(Json(world_details));
+        Ok(Json(world_details))
     } else {
-        return Err(ServerError::ScrapeUnexpectedPageContent);
+        Err(ServerError::ScrapeUnexpectedPageContent)
     }
 }
 

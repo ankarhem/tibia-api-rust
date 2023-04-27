@@ -88,7 +88,7 @@ pub async fn handler(
         .map(|cell| cell.inner_html())
         .collect::<Vec<String>>();
 
-    if cells.len() == 0 {
+    if cells.is_empty() {
         return Err(ServerError::ScrapeIs404Page);
     }
 

@@ -154,11 +154,11 @@ pub async fn handler(State(state): State<AppState>) -> Result<Json<WorldsData>> 
         // RECORD PLAYERS
         let record_html = record_table.inner_html();
         let record_date_start = record_html
-            .find("(")
+            .find('(')
             .ok_or(ServerError::ScrapeUnexpectedPageContent)?
             + 3; // skip `(on`
         let record_date_end = record_html
-            .find(")")
+            .find(')')
             .ok_or(ServerError::ScrapeUnexpectedPageContent)?;
         let record_date = &record_html[record_date_start..record_date_end].replace("&nbsp;", " ");
         let record_date = record_date.trim().to_string();
@@ -173,7 +173,7 @@ pub async fn handler(State(state): State<AppState>) -> Result<Json<WorldsData>> 
             .ok_or(ServerError::ScrapeUnexpectedPageContent)?;
         let record_players = &record_html[record_players_start..record_players_end]
             .replace("&nbsp;", " ")
-            .replace(",", "");
+            .replace(',', "");
         let record_players = record_players.trim().parse::<u32>()?;
         worlds_data.record_players = record_players;
 
@@ -226,7 +226,7 @@ pub async fn handler(State(state): State<AppState>) -> Result<Json<WorldsData>> 
                 players_online: players_online.inner_html().parse()?,
                 location: location.inner_html().parse()?,
                 pvp_type: pvp_type.inner_html().parse().unwrap(),
-                battl_eye: battl_eye.inner_html().len() > 0,
+                battl_eye: !battl_eye.inner_html().is_empty(),
                 battl_eye_date: battl_eye
                     .select(&battl_eye_selector)
                     .next()
