@@ -88,6 +88,10 @@ pub async fn handler(
         .map(|cell| cell.inner_html())
         .collect::<Vec<String>>();
 
+    if cells.len() == 0 {
+        return Err(ServerError::ScrapeIs404Page);
+    }
+
     let mut iter = cells.iter();
 
     let mut stats: KillStatistics = KillStatistics {
@@ -140,4 +144,47 @@ pub async fn handler(
     }
 
     Ok(Json(stats))
+}
+
+#[cfg(test)]
+mod tests {
+    use serde_json::Value;
+
+    use crate::tests::get_path;
+
+    #[tokio::test]
+    async fn it_can_parse_world_kill_statistics() {
+        let response = get_path("/api/v1/worlds/Antica/kill-statistics").await;
+        assert_eq!(response.status(), 200);
+
+        let received_json = response.json::<Value>().await.unwrap();
+        let killed_players = received_json
+            .get("totalLastDay")
+            .unwrap()
+            .get("killedPlayers")
+            .unwrap();
+
+        assert!(killed_players.as_u64().unwrap() > 0);
+    }
+
+    #[tokio::test]
+    async fn it_can_handle_lowercase() {
+        let response = get_path("/api/v1/worlds/antica/kill-statistics").await;
+        assert_eq!(response.status(), 200);
+
+        let received_json = response.json::<Value>().await.unwrap();
+        let killed_players = received_json
+            .get("totalLastDay")
+            .unwrap()
+            .get("killedPlayers")
+            .unwrap();
+
+        assert!(killed_players.as_u64().unwrap() > 0);
+    }
+
+    #[tokio::test]
+    async fn it_returns_404_for_invalid_world() {
+        let response = get_path("/api/v1/worlds/invalid_world/kill-statistics").await;
+        assert_eq!(response.status(), 404);
+    }
 }

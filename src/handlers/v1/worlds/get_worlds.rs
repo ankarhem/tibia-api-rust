@@ -262,3 +262,21 @@ pub async fn handler(State(state): State<AppState>) -> Result<Json<WorldsData>> 
 
     Ok(Json(worlds_data))
 }
+
+#[cfg(test)]
+mod tests {
+    use serde_json::Value;
+
+    use crate::tests::get_path;
+
+    #[tokio::test]
+    async fn it_can_parse_worlds() {
+        let response = get_path("/api/v1/worlds").await;
+        assert_eq!(response.status(), 200);
+
+        let received_json = response.json::<Value>().await.unwrap();
+        let record_players = received_json.get("recordPlayers").unwrap();
+
+        assert_eq!(record_players, 64_028);
+    }
+}

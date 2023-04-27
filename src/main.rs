@@ -18,6 +18,7 @@ use reqwest_middleware::{ClientBuilder, ClientWithMiddleware};
 
 mod error;
 mod handlers;
+mod prelude;
 mod tibia_page;
 mod utils;
 use crate::handlers::v1;
@@ -51,8 +52,7 @@ impl AppState {
     }
 }
 
-#[tokio::main]
-async fn main() {
+fn app() -> Router {
     let openapi_docs = openapi::create_openapi_docs();
 
     let state = AppState::new();
@@ -65,6 +65,13 @@ async fn main() {
         .nest("/api", v1::router(state.clone()))
         .layer(axum::middleware::map_response(main_response_mapper))
         .fallback_service(static_service);
+
+    app
+}
+
+#[tokio::main]
+async fn main() {
+    let app = app();
 
     let addr = "0.0.0.0:7032".parse().unwrap();
     println!("Listening on {}", addr);
@@ -98,4 +105,46 @@ async fn healthcheck() -> impl IntoResponse {
     let mut resp = HashMap::new();
     resp.insert("ok", true);
     Json(resp)
+}
+
+#[cfg(test)]
+mod tests {
+    use serde_json::json;
+    use serde_json::Value;
+    use tokio::net::TcpListener;
+
+    use super::app;
+    use super::prelude::*;
+
+    async fn spawn_server() -> u16 {
+        let listener = TcpListener::bind("0.0.0.0:0").await.unwrap();
+        let addr = listener.local_addr().unwrap();
+        let service = app().into_make_service();
+        tokio::spawn(async move {
+            //
+            axum::Server::bind(&addr).serve(service).await.unwrap()
+        });
+
+        addr.port()
+    }
+
+    pub async fn get_path(path: &str) -> reqwest::Response {
+        let port = spawn_server().await;
+        reqwest::get(f!("http://localhost:{port}{path}"))
+            .await
+            .unwrap()
+    }
+
+    #[tokio::test]
+    async fn test_healthcheck() {
+        let response = get_path("/__healthcheck").await;
+
+        assert_eq!(response.status(), 200);
+
+        let expected_response = json!({
+            "ok": true
+        });
+        let received_json = response.json::<Value>().await.unwrap();
+        assert_eq!(received_json, expected_response)
+    }
 }

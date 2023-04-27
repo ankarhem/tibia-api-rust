@@ -126,3 +126,34 @@ pub async fn handler(
 
     Ok(Json(guilds))
 }
+
+#[cfg(test)]
+mod tests {
+    use serde_json::Value;
+
+    use crate::tests::get_path;
+
+    #[tokio::test]
+    async fn it_can_parse_world_guilds() {
+        let response = get_path("/api/v1/worlds/Antica/guilds").await;
+        assert_eq!(response.status(), 200);
+
+        let received_json = response.json::<Value>().await.unwrap();
+        assert_eq!(received_json.is_array(), true);
+    }
+
+    #[tokio::test]
+    async fn it_can_handle_lowercase() {
+        let response = get_path("/api/v1/worlds/antica/guilds").await;
+        assert_eq!(response.status(), 200);
+
+        let received_json = response.json::<Value>().await.unwrap();
+        assert_eq!(received_json.is_array(), true);
+    }
+
+    #[tokio::test]
+    async fn it_returns_404_for_invalid_world() {
+        let response = get_path("/api/v1/worlds/invalid_world/guilds").await;
+        assert_eq!(response.status(), 404);
+    }
+}

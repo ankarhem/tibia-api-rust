@@ -297,3 +297,36 @@ pub async fn handler(
         return Err(ServerError::ScrapeUnexpectedPageContent);
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use serde_json::Value;
+
+    use crate::tests::get_path;
+
+    #[tokio::test]
+    async fn it_can_parse_world_details() {
+        let response = get_path("/api/v1/worlds/Antica").await;
+        assert_eq!(response.status(), 200);
+
+        let received_json = response.json::<Value>().await.unwrap();
+        let name = received_json.get("name").unwrap();
+        assert_eq!(name, "Antica");
+    }
+
+    #[tokio::test]
+    async fn it_can_handle_lowercase() {
+        let response = get_path("/api/v1/worlds/antica").await;
+        assert_eq!(response.status(), 200);
+
+        let received_json = response.json::<Value>().await.unwrap();
+        let name = received_json.get("name").unwrap();
+        assert_eq!(name, "Antica");
+    }
+
+    #[tokio::test]
+    async fn it_returns_404_for_invalid_worlds() {
+        let response = get_path("/api/v1/worlds/invalid_world").await;
+        assert_eq!(response.status(), 404);
+    }
+}
