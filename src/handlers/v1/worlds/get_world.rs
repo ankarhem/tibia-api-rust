@@ -7,13 +7,14 @@ use scraper::Selector;
 use serde::Serialize;
 use utoipa::ToSchema;
 
+use crate::prelude::COMMUNITY_URL;
 use crate::{AppState, Result, ServerError, TibiaPage};
 
 use crate::tibia_page::sanitize_string;
 
 use super::{
     get_worlds::{GameWorldType, Location, PvpType, TransferType},
-    PathParams, COMMUNITY_URL,
+    PathParams,
 };
 
 #[derive(Debug, Serialize, ToSchema)]

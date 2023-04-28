@@ -10,7 +10,7 @@ use utoipa::ToSchema;
 use crate::{AppState, ServerError};
 use crate::{Result, TibiaPage};
 
-use super::COMMUNITY_URL;
+use crate::prelude::COMMUNITY_URL;
 
 #[derive(Serialize, Debug, ToSchema)]
 #[serde(rename_all = "camelCase")]

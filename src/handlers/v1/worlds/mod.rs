@@ -13,8 +13,6 @@ pub struct PathParams {
     world_name: String,
 }
 
-const COMMUNITY_URL: &str = "https://www.tibia.com/community/";
-
 pub fn router(state: AppState) -> Router {
     Router::new()
         .route("/", get(get_worlds::handler))

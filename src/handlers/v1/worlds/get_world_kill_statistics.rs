@@ -9,9 +9,10 @@ use scraper::Selector;
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
+use crate::prelude::COMMUNITY_URL;
 use crate::{AppState, Result, ServerError, TibiaPage};
 
-use super::{PathParams, COMMUNITY_URL};
+use super::PathParams;
 
 #[derive(Debug, Serialize, Deserialize, Clone, ToSchema)]
 #[serde(rename_all = "camelCase")]

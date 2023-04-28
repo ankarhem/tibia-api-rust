@@ -10,9 +10,10 @@ use serde::Serialize;
 use serde_with::skip_serializing_none;
 use utoipa::ToSchema;
 
+use crate::prelude::COMMUNITY_URL;
 use crate::{AppState, Result, ServerError, TibiaPage};
 
-use super::{PathParams, COMMUNITY_URL};
+use super::PathParams;
 
 #[skip_serializing_none]
 #[derive(Debug, Serialize, ToSchema)]
@@ -86,7 +87,8 @@ pub async fn handler(
     let img_selector = Selector::parse("img").expect("Invalid selector for guild logo");
 
     for i in 0..2 {
-        let table = tables.first()
+        let table = tables
+            .first()
             .ok_or(ServerError::ScrapeUnexpectedPageContent)?;
 
         let rows = table.select(&row_selector);

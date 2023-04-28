@@ -10,14 +10,18 @@ pub fn create_openapi_docs() -> openapi::OpenApi {
             (url = "https://tibia.ankarhem.dev"),
         ),
         paths(
+            // WORLDS
             v1::worlds::get_worlds::handler,
             v1::worlds::get_world::handler,
             v1::worlds::get_world_kill_statistics::handler,
-            v1::worlds::get_world_guilds::handler
+            v1::worlds::get_world_guilds::handler,
+            // TOWNS
+            v1::towns::get_towns::handler,
         ),
         components(schemas(
             ClientErrorCode,
             ClientError,
+            // WORLDS
             v1::worlds::get_worlds::WorldsData,
             v1::worlds::get_worlds::World,
             v1::worlds::get_worlds::GameWorldType,
@@ -31,6 +35,8 @@ pub fn create_openapi_docs() -> openapi::OpenApi {
             v1::worlds::get_world_kill_statistics::RaceKillStatistics,
             v1::worlds::get_world_kill_statistics::KilledAmounts,
             v1::worlds::get_world_guilds::Guild,
+            // TOWNS
+            v1::towns::get_towns::Town,
         )),
         tags((name = "Worlds", description = "World related endpoints"))
     )]
