@@ -84,7 +84,7 @@ pub struct World {
     #[schema(example = "Antica")]
     name: String,
     #[schema(example = "1337")]
-    players_online: u32,
+    players_online_count: u32,
     location: Location,
     pvp_type: PvpType,
     battl_eye: bool,
@@ -223,7 +223,7 @@ pub async fn handler(State(state): State<AppState>) -> Result<Json<WorldsData>> 
                     .next()
                     .ok_or(ServerError::ScrapeUnexpectedPageContent)?
                     .inner_html(),
-                players_online: players_online.inner_html().parse()?,
+                players_online_count: players_online.inner_html().parse()?,
                 location: location.inner_html().parse()?,
                 pvp_type: pvp_type.inner_html().parse().unwrap(),
                 battl_eye: !battl_eye.inner_html().is_empty(),
@@ -257,8 +257,12 @@ pub async fn handler(State(state): State<AppState>) -> Result<Json<WorldsData>> 
         return Err(ServerError::ScrapeUnexpectedPageContent);
     }
 
-    let players_online: u32 = worlds_data.worlds.iter().map(|w| w.players_online).sum();
-    worlds_data.players_online_total = players_online;
+    let players_online_total: u32 = worlds_data
+        .worlds
+        .iter()
+        .map(|w| w.players_online_count)
+        .sum();
+    worlds_data.players_online_total = players_online_total;
 
     Ok(Json(worlds_data))
 }
