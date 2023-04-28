@@ -57,7 +57,6 @@ fn app() -> Router {
 
     let state = AppState::new();
     let static_service = ServeDir::new("static");
-    
 
     Router::new()
         .merge(SwaggerUi::new("/swagger").url("/api-docs/openapi.json", openapi_docs))
