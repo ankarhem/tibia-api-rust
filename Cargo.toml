@@ -8,6 +8,7 @@ edition = "2021"
 [dependencies]
 axum = { version = "0.6.15", features = ["macros"] }
 capitalize = "0.1.0"
+chrono = "0.4.24"
 http-cache-reqwest = "0.9.0"
 reqwest = { version = "0.11.16", features = ["brotli", "gzip", "deflate", "json"] }
 reqwest-middleware = "0.2.1"

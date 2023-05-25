@@ -8,6 +8,7 @@ use serde::Serialize;
 use utoipa::ToSchema;
 
 use crate::prelude::COMMUNITY_URL;
+use crate::utils::time::TibiaTime;
 use crate::{AppState, Result, ServerError, TibiaPage};
 
 use crate::tibia_page::sanitize_string;
@@ -70,14 +71,14 @@ pub struct WorldDetails {
     players_online_count: u32,
     #[schema(example = "1211")]
     players_online_record: u32,
-    players_online_record_date: String,
-    creation_date: String,
+    players_online_record_date: TibiaTime,
+    creation_date: TibiaTime,
     location: Location,
     pvp_type: PvpType,
     #[schema(example = json!(["Rise of Devovorga", "The Lightbearer"]))]
     world_quest_titles: Vec<String>,
     battl_eye: bool,
-    battl_eye_date: Option<String>,
+    battl_eye_date: Option<TibiaTime>,
     game_world_type: GameWorldType,
     transfer_type: Option<TransferType>,
     premium_required: bool,
@@ -147,8 +148,8 @@ pub async fn handler(
             is_online: true,
             players_online_count: 0,
             players_online_record: 0,
-            players_online_record_date: "".to_string(),
-            creation_date: "".to_string(),
+            players_online_record_date: TibiaTime::default(),
+            creation_date: TibiaTime::default(),
             location: Location::Europe,
             pvp_type: PvpType::Open,
             world_quest_titles: vec![],
@@ -200,11 +201,16 @@ pub async fn handler(
                         .find(')')
                         .ok_or(ServerError::ScrapeUnexpectedPageContent)?;
 
-                    let date_string = sanitize_string(&string[start_date..end_date]);
-                    world_details.players_online_record_date = date_string;
+                    let date = sanitize_string(&string[start_date..end_date])
+                        .parse::<TibiaTime>()
+                        .map_err(|_| ServerError::ScrapeUnexpectedPageContent)?;
+                    world_details.players_online_record_date = date;
                 }
                 "Creation Date:" => {
-                    let date = value.inner_html();
+                    let date = value
+                        .inner_html()
+                        .parse::<TibiaTime>()
+                        .map_err(|_| ServerError::ScrapeUnexpectedPageContent)?;
                     world_details.creation_date = date;
                 }
                 "Location:" => {
@@ -233,8 +239,13 @@ pub async fn handler(
                             .ok_or(ServerError::ScrapeUnexpectedPageContent)?
                             + 6;
                         world_details.battl_eye = true;
-                        world_details.battl_eye_date =
-                            Some(string[start..string.len()].to_string());
+
+                        let date = string[start..string.len()]
+                            .to_string()
+                            .replace('.', "")
+                            .parse::<TibiaTime>()
+                            .map_err(|_| ServerError::ScrapeUnexpectedPageContent)?;
+                        world_details.battl_eye_date = Some(date);
                     } else {
                         world_details.battl_eye = false;
                     }

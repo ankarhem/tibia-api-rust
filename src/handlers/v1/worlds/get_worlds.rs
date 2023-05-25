@@ -7,6 +7,7 @@ use scraper::Selector;
 use serde::Serialize;
 use utoipa::ToSchema;
 
+use crate::utils::time::TibiaTime;
 use crate::{AppState, ServerError};
 use crate::{Result, TibiaPage};
 
@@ -88,7 +89,7 @@ pub struct World {
     location: Location,
     pvp_type: PvpType,
     battl_eye: bool,
-    battl_eye_date: Option<String>,
+    battl_eye_date: Option<TibiaTime>,
     #[schema(example = false)]
     premium_required: bool,
     transfer_type: Option<TransferType>,
@@ -100,7 +101,7 @@ pub struct World {
 pub struct WorldsData {
     players_online_total: u32,
     record_players: u32,
-    record_date: String,
+    record_date: TibiaTime,
     worlds: Vec<World>,
 }
 
@@ -144,7 +145,7 @@ pub async fn handler(State(state): State<AppState>) -> Result<Json<WorldsData>> 
     let mut worlds_data = WorldsData {
         players_online_total: 0,
         record_players: 0,
-        record_date: "".to_string(),
+        record_date: TibiaTime::default(),
         worlds: vec![],
     };
 
@@ -162,7 +163,9 @@ pub async fn handler(State(state): State<AppState>) -> Result<Json<WorldsData>> 
             .ok_or(ServerError::ScrapeUnexpectedPageContent)?;
         let record_date = &record_html[record_date_start..record_date_end].replace("&nbsp;", " ");
         let record_date = record_date.trim().to_string();
-        worlds_data.record_date = record_date;
+        worlds_data.record_date = record_date
+            .parse::<TibiaTime>()
+            .map_err(|_| ServerError::ScrapeUnexpectedPageContent)?;
 
         let record_players_start = record_html
             .find("</b>")
@@ -240,7 +243,7 @@ pub async fn handler(State(state): State<AppState>) -> Result<Json<WorldsData>> 
                             let end_pattern = ".</p>";
                             let start = s.find(start_pattern).map(|i| i + start_pattern.len())?;
                             let end = s.find(end_pattern)?;
-                            let date = s[start..end].to_string();
+                            let date = s[start..end].to_string().parse::<TibiaTime>().ok()?;
 
                             Some(date)
                         })
