@@ -13,6 +13,7 @@ use reqwest::{Client, Method};
 
 use tower_http::compression::CompressionLayer;
 use tower_http::cors::{Any, CorsLayer};
+use tower_http::services::ServeDir;
 use tower_http::trace::TraceLayer;
 use tower_request_id::{RequestId, RequestIdLayer};
 use tracing::info_span;
@@ -28,6 +29,8 @@ fn app() -> Router {
     let app_state = AppState {
         client: reqwest_client,
     };
+
+    let public_service = ServeDir::new("public");
 
     Router::new()
         .layer(CompressionLayer::new())
@@ -63,6 +66,7 @@ fn app() -> Router {
             "/__healthcheck",
             routing::get(handlers::healthcheck::handler),
         )
+        .fallback_service(public_service)
 }
 
 pub async fn run(listener: TcpListener) -> Result<()> {
