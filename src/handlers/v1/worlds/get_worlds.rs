@@ -89,6 +89,7 @@ pub struct World {
     location: Location,
     pvp_type: PvpType,
     battl_eye: bool,
+    #[schema(example = "2017-08-29")]
     battl_eye_date: Option<TibiaTime>,
     #[schema(example = false)]
     premium_required: bool,
@@ -101,6 +102,7 @@ pub struct World {
 pub struct WorldsData {
     players_online_total: u32,
     record_players: u32,
+    #[schema(example = "2007-11-28T18:26:00+00:00")]
     record_date: TibiaTime,
     worlds: Vec<World>,
 }
@@ -226,7 +228,7 @@ pub async fn handler(State(state): State<AppState>) -> Result<Json<WorldsData>> 
                     .next()
                     .ok_or(ServerError::ScrapeUnexpectedPageContent)?
                     .inner_html(),
-                players_online_count: players_online.inner_html().parse()?,
+                players_online_count: players_online.inner_html().replace(",", "").parse()?,
                 location: location.inner_html().parse()?,
                 pvp_type: pvp_type.inner_html().parse().unwrap(),
                 battl_eye: !battl_eye.inner_html().is_empty(),

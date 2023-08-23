@@ -1,3 +1,4 @@
+use super::time::TibiaTime;
 use crate::error::{ClientError, ClientErrorCode};
 use crate::v1;
 use utoipa::openapi::{self, InfoBuilder};
@@ -22,6 +23,7 @@ pub fn create_openapi_docs() -> openapi::OpenApi {
             ClientErrorCode,
             ClientError,
             // WORLDS
+            TibiaTime,
             v1::worlds::get_worlds::WorldsData,
             v1::worlds::get_worlds::World,
             v1::worlds::get_worlds::GameWorldType,

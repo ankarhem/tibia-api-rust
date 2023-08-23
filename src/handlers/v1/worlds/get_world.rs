@@ -71,7 +71,9 @@ pub struct WorldDetails {
     players_online_count: u32,
     #[schema(example = "1211")]
     players_online_record: u32,
+    #[schema(example = "2020-05-01T15:58:30+00:00")]
     players_online_record_date: TibiaTime,
+    #[schema(example = "1997-01")]
     creation_date: TibiaTime,
     location: Location,
     pvp_type: PvpType,
@@ -207,8 +209,8 @@ pub async fn handler(
                     world_details.players_online_record_date = date;
                 }
                 "Creation Date:" => {
-                    let date = value
-                        .inner_html()
+                    let date_html = sanitize_string(&value.inner_html());
+                    let date = date_html
                         .parse::<TibiaTime>()
                         .map_err(|_| ServerError::ScrapeUnexpectedPageContent)?;
                     world_details.creation_date = date;
