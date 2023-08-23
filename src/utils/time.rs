@@ -7,6 +7,7 @@ use utoipa::ToSchema;
 #[derive(Debug)]
 pub struct ParseTimeError;
 
+#[allow(clippy::upper_case_acronyms)]
 #[derive(Debug, Serialize, ToSchema, PartialEq)]
 #[serde(untagged)]
 pub enum TibiaTime {
