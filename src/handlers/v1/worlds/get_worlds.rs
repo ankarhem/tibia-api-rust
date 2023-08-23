@@ -228,7 +228,7 @@ pub async fn handler(State(state): State<AppState>) -> Result<Json<WorldsData>> 
                     .next()
                     .ok_or(ServerError::ScrapeUnexpectedPageContent)?
                     .inner_html(),
-                players_online_count: players_online.inner_html().replace(",", "").parse()?,
+                players_online_count: players_online.inner_html().replace(',', "").parse()?,
                 location: location.inner_html().parse()?,
                 pvp_type: pvp_type.inner_html().parse().unwrap(),
                 battl_eye: !battl_eye.inner_html().is_empty(),
