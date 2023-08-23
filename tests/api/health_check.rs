@@ -1,6 +1,6 @@
 use reqwest::StatusCode;
 
-use PKG_NAME::*;
+use tibia_api::*;
 
 #[tokio::test]
 async fn healthcheck_works() {

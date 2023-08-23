@@ -1,22 +1,24 @@
 use std::net::{SocketAddr, TcpListener};
 use std::time::Duration;
 
-mod handlers;
-mod prelude;
-pub mod telemetry;
-mod utils;
-
 use anyhow::Result;
-use axum::{body::Body, http::Request, routing, Router};
+use axum::{body::Body, http::Request, routing::get, Router};
 use once_cell::sync::Lazy;
 use reqwest::{Client, Method};
-
 use tower_http::compression::CompressionLayer;
 use tower_http::cors::{Any, CorsLayer};
 use tower_http::services::ServeDir;
 use tower_http::trace::TraceLayer;
 use tower_request_id::{RequestId, RequestIdLayer};
 use tracing::info_span;
+use utoipa_redoc::{Redoc, Servable};
+
+mod handlers;
+mod prelude;
+pub mod telemetry;
+mod utils;
+
+use utils::*;
 
 #[derive(Clone)]
 pub struct AppState {
@@ -24,6 +26,8 @@ pub struct AppState {
 }
 
 fn app() -> Router {
+    let openapi_docs = openapi::create_openapi_docs();
+
     let reqwest_client = create_client().expect("To create reqwest client");
 
     let app_state = AppState {
@@ -62,10 +66,9 @@ fn app() -> Router {
         .layer(RequestIdLayer)
         .with_state(app_state)
         // Omit these from the logs etc.
-        .route(
-            "/__healthcheck",
-            routing::get(handlers::healthcheck::handler),
-        )
+        .route("/", get(handlers::redocly::redirect_redocly))
+        .merge(Redoc::with_url("/api-docs", openapi_docs))
+        .route("/__healthcheck", get(handlers::healthcheck::handler))
         .fallback_service(public_service)
 }
 
@@ -117,7 +120,7 @@ pub fn create_client() -> Result<Client, reqwest::Error> {
     Client::builder()
         .default_headers({
             let mut headers = reqwest::header::HeaderMap::new();
-            headers.insert(reqwest::header::USER_AGENT, "PKG_NAME".parse().unwrap());
+            headers.insert(reqwest::header::USER_AGENT, "tibia_api".parse().unwrap());
 
             headers
         })

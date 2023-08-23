@@ -1,5 +1,5 @@
 [package]
-name = "PKG_NAME"
+name = "tibia_api"
 version = "0.1.0"
 edition = "2021"
 
@@ -33,3 +33,5 @@ tracing-subscriber = { version = "0.3.17", features = [
   "registry",
   "env-filter",
 ] }
+utoipa = "3.5.0"
+utoipa-redoc = { version = "0.1.0", features = ["axum"] }
