@@ -65,9 +65,11 @@ fn app() -> Router {
         )
         .layer(RequestIdLayer)
         .with_state(app_state)
+        .route("/openapi.json", get(handlers::redocly::serve_openapi))
+        .with_state(openapi_docs)
         // Omit these from the logs etc.
         .route("/", get(handlers::redocly::redirect_redocly))
-        .merge(Redoc::with_url("/api-docs", openapi_docs))
+        .route("/api-docs", get(handlers::redocly::serve_redocly))
         .route("/__healthcheck", get(handlers::healthcheck::handler))
         .fallback_service(public_service)
 }
