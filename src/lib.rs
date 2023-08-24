@@ -11,7 +11,6 @@ use tower_http::services::ServeDir;
 use tower_http::trace::TraceLayer;
 use tower_request_id::{RequestId, RequestIdLayer};
 use tracing::info_span;
-use utoipa_redoc::{Redoc, Servable};
 
 mod handlers;
 mod prelude;
@@ -37,6 +36,7 @@ fn app() -> Router {
     let public_service = ServeDir::new("public");
 
     Router::new()
+        .route("/api/v1/towns", get(handlers::towns::get_towns))
         .layer(CompressionLayer::new())
         .layer(
             CorsLayer::new()
@@ -120,12 +120,12 @@ pub fn spawn_app() -> SocketAddr {
 
 pub fn create_client() -> Result<Client, reqwest::Error> {
     Client::builder()
-        .default_headers({
-            let mut headers = reqwest::header::HeaderMap::new();
-            headers.insert(reqwest::header::USER_AGENT, "tibia_api".parse().unwrap());
-
-            headers
-        })
+        .user_agent(
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:109.0) Gecko/20100101 Firefox/113.0",
+        )
+        .brotli(true)
+        .deflate(true)
+        .gzip(true)
         .pool_idle_timeout(Duration::from_secs(15))
         .pool_max_idle_per_host(10)
         .build()
