@@ -9,9 +9,41 @@ use tracing::instrument;
 
 use crate::AppState;
 
+/// List all towns
+///
+#[utoipa::path(
+    get,
+    operation_id = "get_towns",
+    path = "/api/v1/towns",
+    responses(
+        (status = 200, description = "Success", body = [String], example = json!([
+            "Ab\'Dendriel",
+            "Ankrahmun",
+            "Carlin",
+            "Darashia",
+            "Edron",
+            "Farmine",
+            "Gray Beach",
+            "Issavi",
+            "Kazordoon",
+            "Liberty Bay",
+            "Moonfall",
+            "Port Hope",
+            "Rathleton",
+            "Silvertides",
+            "Svargrond",
+            "Thais",
+            "Venore",
+            "Yalahar",
+        ])),
+        (status = 500, description = "Internal Server Error"),
+        (status = 503, description = "Service Unavailable", body = PublicErrorBody)
+    ),
+    tag = "Towns"
+)]
 #[axum::debug_handler]
 #[instrument(skip(state))]
-pub async fn get_towns(State(state): State<AppState>) -> Result<Json<Vec<String>>, PublicError> {
+pub async fn get_towns(State(state): State<AppState>) -> Result<Json<Vec<String>>, ServerError> {
     let client = &state.client;
 
     let page = fetch_towns_page(client).await.map_err(|e| {

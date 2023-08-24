@@ -1,3 +1,5 @@
+use crate::handlers;
+use crate::prelude::*;
 use utoipa::openapi::{self, InfoBuilder};
 use utoipa::OpenApi;
 
@@ -8,8 +10,10 @@ pub fn create_openapi_docs() -> openapi::OpenApi {
             (url = "https://tibia.ankarhem.dev"),
         ),
         paths(
+            handlers::towns::get_towns,
         ),
         components(schemas(
+            PublicErrorBody
         )),
         tags()
     )]
