@@ -42,7 +42,7 @@ impl IntoResponse for ServerError {
         match self {
             ServerError::FetchError(e) => match e.status() {
                 Some(StatusCode::NOT_FOUND) => StatusCode::NOT_FOUND.into_response(),
-                Some(status) => {
+                Some(_) => {
                     let body = PublicErrorBody {
                         message: "The tibia website failed to process the underlying request"
                             .into(),
