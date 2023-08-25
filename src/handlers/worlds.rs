@@ -86,7 +86,6 @@ pub async fn parse_worlds_page(response: Response) -> Result<WorldsResponse> {
         .find(&record_html)
         .context(format!("Record date not found in {}", record_html))?
         .as_str();
-    println!("{record_date}");
     let naive_dt = NaiveDateTime::parse_from_str(record_date, "(on %b %d %Y, %H:%M:%S CET)")
         .context(format!("Failed to parse date {}", record_date))?;
     let utc_time = CET

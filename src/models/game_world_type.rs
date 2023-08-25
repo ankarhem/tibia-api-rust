@@ -15,7 +15,8 @@ impl std::str::FromStr for GameWorldType {
     fn from_str(s: &str) -> Result<Self> {
         match s {
             "experimental" => Ok(GameWorldType::Experimental),
-            _ => Ok(GameWorldType::Regular),
+            "regular" => Ok(GameWorldType::Regular),
+            _ => Err(anyhow::anyhow!("Invalid game world type: {}", s)),
         }
     }
 }

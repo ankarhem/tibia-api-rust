@@ -6,7 +6,7 @@ use tibia_api::*;
 async fn can_get_a_world() {
     let addr = spawn_app();
 
-    let response = reqwest::get(format!("http://{addr}/api/v1/world/Antica"))
+    let response = reqwest::get(format!("http://{addr}/api/v1/worlds/Antica"))
         .await
         .unwrap();
     assert_eq!(response.status(), StatusCode::OK);
@@ -19,7 +19,7 @@ async fn can_get_a_world() {
 async fn can_handle_lowercase() {
     let addr = spawn_app();
 
-    let response = reqwest::get(format!("http://{addr}/api/v1/world/antica"))
+    let response = reqwest::get(format!("http://{addr}/api/v1/worlds/antica"))
         .await
         .unwrap();
     assert_eq!(response.status(), StatusCode::OK);
@@ -32,7 +32,7 @@ async fn can_handle_lowercase() {
 async fn returns_404_for_invalid_world() {
     let addr = spawn_app();
 
-    let response = reqwest::get(format!("http://{addr}/api/v1/world/invalid_world"))
+    let response = reqwest::get(format!("http://{addr}/api/v1/worlds/invalid_world"))
         .await
         .unwrap();
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
