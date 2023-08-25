@@ -13,6 +13,7 @@ use tower_request_id::{RequestId, RequestIdLayer};
 use tracing::info_span;
 
 mod handlers;
+pub mod models;
 mod prelude;
 pub mod telemetry;
 mod utils;

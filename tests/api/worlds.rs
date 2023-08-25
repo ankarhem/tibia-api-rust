@@ -1,5 +1,5 @@
 use reqwest::StatusCode;
-use serde_json::{json, Value};
+use serde_json::Value;
 use tibia_api::*;
 
 #[tokio::test]
