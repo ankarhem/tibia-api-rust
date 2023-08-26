@@ -43,6 +43,10 @@ fn app() -> Router {
             "/api/v1/worlds/:world_name",
             get(handlers::worlds_world_name::get),
         )
+        .route(
+            "/api/v1/worlds/:world_name/guilds",
+            get(handlers::worlds_world_name_guilds::get),
+        )
         .layer(CompressionLayer::new())
         .layer(
             CorsLayer::new()

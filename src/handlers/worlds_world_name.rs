@@ -20,7 +20,7 @@ use tracing::instrument;
 pub struct WorldParams {
     /// Name of world
     #[param(example = "Antica")]
-    world_name: String,
+    pub world_name: String,
 }
 
 /// World
@@ -39,7 +39,7 @@ pub struct WorldParams {
     tag = "Worlds"
 )]
 #[axum::debug_handler]
-#[instrument(skip(state))]
+#[instrument(name = "Get World", skip(state))]
 pub async fn get(
     State(state): State<AppState>,
     Path(path_params): Path<WorldParams>,

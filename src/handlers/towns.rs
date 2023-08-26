@@ -42,7 +42,7 @@ use crate::AppState;
     tag = "Towns"
 )]
 #[axum::debug_handler]
-#[instrument(skip(state))]
+#[instrument(name = "Get Towns", skip(state))]
 pub async fn get(State(state): State<AppState>) -> Result<Json<Vec<String>>, ServerError> {
     let client = &state.client;
 

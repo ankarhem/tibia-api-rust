@@ -14,6 +14,7 @@ pub fn create_openapi_docs() -> openapi::OpenApi {
             handlers::towns::get,
             handlers::worlds::get,
             handlers::worlds_world_name::get,
+            handlers::worlds_world_name_guilds::get,
         ),
         components(schemas(
             PublicErrorBody,
@@ -25,7 +26,8 @@ pub fn create_openapi_docs() -> openapi::OpenApi {
             Vocation,
             PvpType,
             TransferType,
-            World
+            World,
+            Guild
         )),
         tags()
     )]

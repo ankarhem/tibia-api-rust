@@ -1,4 +1,5 @@
 mod game_world_type;
+mod guild;
 mod location;
 mod player;
 mod pvp_type;
@@ -9,6 +10,7 @@ mod world_details;
 mod worlds;
 
 pub use game_world_type::*;
+pub use guild::*;
 pub use location::*;
 pub use player::*;
 pub use pvp_type::*;

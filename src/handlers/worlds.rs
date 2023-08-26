@@ -26,7 +26,7 @@ use tracing::instrument;
     tag = "Worlds"
 )]
 #[axum::debug_handler]
-#[instrument(skip(state))]
+#[instrument(name = "Get Worlds", skip(state))]
 pub async fn get(State(state): State<AppState>) -> Result<Json<WorldsResponse>, ServerError> {
     let client = &state.client;
 
