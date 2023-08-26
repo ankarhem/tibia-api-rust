@@ -16,8 +16,10 @@ use scraper::Selector;
 use serde::{Deserialize, Serialize};
 use tracing::instrument;
 
-#[derive(Serialize, Deserialize, Debug)]
-pub struct PathParams {
+#[derive(Serialize, Deserialize, Debug, utoipa::IntoParams)]
+pub struct WorldParams {
+    /// Name of world
+    #[param(example = "Antica")]
     world_name: String,
 }
 
@@ -27,9 +29,7 @@ pub struct PathParams {
     get,
     operation_id = "get_world_details",
     path = "/api/v1/worlds/{world_name}",
-    params(
-        ("world_name" = String, Path, description = "World name", example = "Antica")
-    ),
+    params(WorldParams),
     responses(
         (status = 200, description = "Success", body = WorldDetails),
         (status = 404, description = "Not Found"),
@@ -42,7 +42,7 @@ pub struct PathParams {
 #[instrument(skip(state))]
 pub async fn get_world_details(
     State(state): State<AppState>,
-    Path(path_params): Path<PathParams>,
+    Path(path_params): Path<WorldParams>,
 ) -> Result<impl IntoResponse, ServerError> {
     let client = &state.client;
     let world_name = path_params.world_name.capitalize();

@@ -55,8 +55,6 @@ pub async fn get_towns(State(state): State<AppState>) -> Result<Json<Vec<String>
         e
     })?;
 
-    println!("Towns: {:?}", towns);
-
     Ok(Json(towns))
 }
 
