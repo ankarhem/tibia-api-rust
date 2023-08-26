@@ -23,7 +23,7 @@ pub struct WorldParams {
     world_name: String,
 }
 
-/// Get world details
+/// World
 ///
 #[utoipa::path(
     get,
@@ -40,7 +40,7 @@ pub struct WorldParams {
 )]
 #[axum::debug_handler]
 #[instrument(skip(state))]
-pub async fn get_world_details(
+pub async fn get(
     State(state): State<AppState>,
     Path(path_params): Path<WorldParams>,
 ) -> Result<impl IntoResponse, ServerError> {

@@ -12,7 +12,7 @@ use reqwest::{Client, Response};
 use scraper::Selector;
 use tracing::instrument;
 
-/// List all worlds.
+/// Worlds
 ///
 #[utoipa::path(
     get,
@@ -27,9 +27,7 @@ use tracing::instrument;
 )]
 #[axum::debug_handler]
 #[instrument(skip(state))]
-pub async fn get_worlds(
-    State(state): State<AppState>,
-) -> Result<Json<WorldsResponse>, ServerError> {
+pub async fn get(State(state): State<AppState>) -> Result<Json<WorldsResponse>, ServerError> {
     let client = &state.client;
 
     let response = fetch_worlds_page(client).await.map_err(|e| {
@@ -45,7 +43,7 @@ pub async fn get_worlds(
 }
 
 #[instrument(skip(client))]
-pub async fn fetch_worlds_page(client: &Client) -> Result<Response> {
+async fn fetch_worlds_page(client: &Client) -> Result<Response> {
     let mut params = HashMap::new();
     params.insert("subtopic", "worlds");
     let response = client.get(COMMUNITY_URL).query(&params).send().await?;
@@ -54,7 +52,7 @@ pub async fn fetch_worlds_page(client: &Client) -> Result<Response> {
 }
 
 #[instrument(skip(response))]
-pub async fn parse_worlds_page(response: Response) -> Result<WorldsResponse> {
+async fn parse_worlds_page(response: Response) -> Result<WorldsResponse> {
     let text = response.text().await?;
     let document = scraper::Html::parse_document(&text);
 

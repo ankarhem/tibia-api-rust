@@ -11,9 +11,9 @@ pub fn create_openapi_docs() -> openapi::OpenApi {
             (url = "https://tibia.ankarhem.dev"),
         ),
         paths(
-            handlers::towns::get_towns,
-            handlers::worlds::get_worlds,
-            handlers::world_details::get_world_details,
+            handlers::towns::get,
+            handlers::worlds::get,
+            handlers::worlds_world_name::get,
         ),
         components(schemas(
             PublicErrorBody,

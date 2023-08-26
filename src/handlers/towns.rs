@@ -9,7 +9,7 @@ use tracing::instrument;
 
 use crate::AppState;
 
-/// List all towns
+/// Towns
 ///
 #[utoipa::path(
     get,
@@ -43,7 +43,7 @@ use crate::AppState;
 )]
 #[axum::debug_handler]
 #[instrument(skip(state))]
-pub async fn get_towns(State(state): State<AppState>) -> Result<Json<Vec<String>>, ServerError> {
+pub async fn get(State(state): State<AppState>) -> Result<Json<Vec<String>>, ServerError> {
     let client = &state.client;
 
     let page = fetch_towns_page(client).await.map_err(|e| {
@@ -59,7 +59,7 @@ pub async fn get_towns(State(state): State<AppState>) -> Result<Json<Vec<String>
 }
 
 #[instrument(skip(client))]
-pub async fn fetch_towns_page(client: &Client) -> Result<reqwest::Response, reqwest::Error> {
+async fn fetch_towns_page(client: &Client) -> Result<reqwest::Response, reqwest::Error> {
     let mut params = HashMap::new();
     params.insert("subtopic", "houses");
 
@@ -68,7 +68,7 @@ pub async fn fetch_towns_page(client: &Client) -> Result<reqwest::Response, reqw
 }
 
 #[instrument(skip(response))]
-pub async fn parse_towns_page(response: reqwest::Response) -> Result<Vec<String>> {
+async fn parse_towns_page(response: reqwest::Response) -> Result<Vec<String>> {
     let text = response.text().await?;
     let document = scraper::Html::parse_document(&text);
 
