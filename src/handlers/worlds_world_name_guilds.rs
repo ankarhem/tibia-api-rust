@@ -77,6 +77,11 @@ async fn parse_guilds_page(response: Response) -> Result<Option<Vec<Guild>>> {
         Selector::parse(".TableContainer table.TableContent").expect("Selector to be valid");
     let mut tables = main_content.select(&table_selector);
 
+    // assume 404
+    if tables.clone().count() != 2 {
+        return Ok(None);
+    }
+
     let mut guilds = vec![];
 
     let row_selector = Selector::parse("tr:not(:first-child)").expect("Invalid selector for rows");
