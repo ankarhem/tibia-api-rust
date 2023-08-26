@@ -2,6 +2,7 @@ use anyhow::{anyhow, Result};
 use serde::Serialize;
 use utoipa::ToSchema;
 
+/// The location where the server is hosted
 #[derive(Serialize, Debug, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub enum Location {
