@@ -76,7 +76,7 @@ fn app() -> Router {
         // Omit these from the logs etc.
         .route("/", get(handlers::redocly::redirect_redocly))
         .route("/api-docs", get(handlers::redocly::serve_redocly))
-        .route("/__healthcheck", get(handlers::healthcheck::handler))
+        .route("/__healthcheck", get(handlers::__healthcheck::get))
         .fallback_service(public_service)
 }
 

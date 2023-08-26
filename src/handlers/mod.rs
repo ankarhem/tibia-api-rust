@@ -1,5 +1,9 @@
-pub mod healthcheck;
 pub mod redocly;
+
+// Handlers
+
+/// /__healthcheck
+pub mod __healthcheck;
 /// /towns
 pub mod towns;
 /// /worlds
