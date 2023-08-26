@@ -38,11 +38,11 @@ pub async fn get(
     let world_name = path_params.world_name.capitalize();
 
     let response = fetch_guilds_page(client, &world_name).await.map_err(|e| {
-        tracing::error!("Failed to fetch world page: {:?}", e);
+        tracing::error!("Failed to fetch guilds page: {:?}", e);
         e
     })?;
     let guilds = parse_guilds_page(response).await.map_err(|e| {
-        tracing::error!("Failed to parse world page: {:?}", e);
+        tracing::error!("Failed to parse guilds page: {:?}", e);
         e
     })?;
 

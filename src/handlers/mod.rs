@@ -12,3 +12,5 @@ pub mod worlds;
 pub mod worlds_world_name;
 /// /worlds/:world_name/guilds
 pub mod worlds_world_name_guilds;
+/// /worlds/:world_name/kill-statistics
+pub mod worlds_world_name_kill_statistic;
