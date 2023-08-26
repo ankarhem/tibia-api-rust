@@ -13,7 +13,7 @@ use super::worlds_world_name::WorldParams;
 use crate::models::{KillStatistics, KilledAmounts, RaceKillStatistics};
 use crate::{prelude::*, AppState};
 
-/// Guilds
+/// Kill Statistics
 ///
 #[utoipa::path(
     get,

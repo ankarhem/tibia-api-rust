@@ -49,7 +49,7 @@ fn app() -> Router {
         )
         .route(
             "/api/v1/worlds/:world_name/kill-statistics",
-            get(handlers::worlds_world_name_kill_statistic::get),
+            get(handlers::worlds_world_name_kill_statistics::get),
         )
         .layer(CompressionLayer::new())
         .layer(

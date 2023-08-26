@@ -15,6 +15,7 @@ pub fn create_openapi_docs() -> openapi::OpenApi {
             handlers::worlds::get,
             handlers::worlds_world_name::get,
             handlers::worlds_world_name_guilds::get,
+            handlers::worlds_world_name_kill_statistics::get,
         ),
         components(schemas(
             PublicErrorBody,
@@ -27,7 +28,10 @@ pub fn create_openapi_docs() -> openapi::OpenApi {
             PvpType,
             TransferType,
             World,
-            Guild
+            Guild,
+            KillStatistics,
+            KilledAmounts,
+            RaceKillStatistics,
         )),
         tags()
     )]
