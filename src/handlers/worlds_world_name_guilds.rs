@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Result};
 use axum::extract::State;
 use axum::Json;
 use axum::{extract::Path, response::IntoResponse};
