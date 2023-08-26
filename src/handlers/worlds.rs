@@ -19,7 +19,7 @@ use tracing::instrument;
     operation_id = "get_worlds",
     path = "/api/v1/worlds",
     responses(
-        (status = 200, description = "Success", body = WorldsData),
+        (status = 200, description = "Success", body = WorldsResponse),
         (status = 500, description = "Internal Server Error"),
         (status = 503, description = "Service Unavailable", body = PublicErrorBody)
     ),

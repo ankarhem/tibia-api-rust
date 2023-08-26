@@ -1,4 +1,5 @@
 use crate::handlers;
+use crate::models::*;
 use crate::prelude::*;
 use utoipa::openapi::{self, InfoBuilder};
 use utoipa::OpenApi;
@@ -11,9 +12,20 @@ pub fn create_openapi_docs() -> openapi::OpenApi {
         ),
         paths(
             handlers::towns::get_towns,
+            handlers::worlds::get_worlds,
+            handlers::world_details::get_world_details,
         ),
         components(schemas(
-            PublicErrorBody
+            PublicErrorBody,
+            WorldDetails,
+            WorldsResponse,
+            GameWorldType,
+            Location,
+            Player,
+            Vocation,
+            PvpType,
+            TransferType,
+            World
         )),
         tags()
     )]

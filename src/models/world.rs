@@ -15,7 +15,7 @@ pub struct World {
     pub location: Location,
     pub pvp_type: PvpType,
     pub battl_eye: bool,
-    // #[schema(example = "2014-11-28T12:45:59.324310806Z")]
+    #[schema(value_type = Option<String>, format = DateTime)]
     pub battl_eye_date: Option<DateTime<Utc>>,
     #[schema(example = false)]
     pub premium_required: bool,
