@@ -7,7 +7,9 @@ use super::World;
 #[derive(Serialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct WorldsResponse {
+    #[schema(example = 1234)]
     pub players_online_total: u32,
+    #[schema(example = 64_028)]
     pub record_players: u32,
     #[schema(value_type = String, format = DateTime)]
     pub record_date: DateTime<Utc>,

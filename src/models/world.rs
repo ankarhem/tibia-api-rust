@@ -1,4 +1,4 @@
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, NaiveDate, Utc};
 use serde::Serialize;
 use utoipa::ToSchema;
 
@@ -10,13 +10,13 @@ use super::{GameWorldType, Location, PvpType, TransferType};
 pub struct World {
     #[schema(example = "Antica")]
     pub name: String,
-    #[schema(example = "1337")]
+    #[schema(example = 1337)]
     pub players_online_count: u32,
     pub location: Location,
     pub pvp_type: PvpType,
     pub battl_eye: bool,
-    #[schema(value_type = Option<String>, format = DateTime)]
-    pub battl_eye_date: Option<DateTime<Utc>>,
+    #[schema(value_type = Option<String>, format = Date)]
+    pub battl_eye_date: Option<NaiveDate>,
     #[schema(example = false)]
     pub premium_required: bool,
     pub transfer_type: Option<TransferType>,

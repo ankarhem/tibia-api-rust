@@ -8,7 +8,7 @@ use utoipa::ToSchema;
 pub struct Player {
     #[schema(example = "Urinchoklad")]
     pub name: String,
-    #[schema(example = "52")]
+    #[schema(example = 52)]
     pub level: u32,
     pub vocation: Option<Vocation>,
 }

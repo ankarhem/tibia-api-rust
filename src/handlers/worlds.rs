@@ -6,7 +6,7 @@ use anyhow::{Context, Result};
 use axum::{extract::State, Json};
 use chrono::prelude::*;
 use chrono::{TimeZone, Utc};
-use chrono_tz::CET;
+use chrono_tz::Europe::Stockholm;
 use regex::Regex;
 use reqwest::{Client, Response};
 use scraper::Selector;
@@ -81,14 +81,17 @@ pub async fn parse_worlds_page(response: Response) -> Result<WorldsResponse> {
 
     // RECORD PLAYERS
     let record_html = record_table.inner_html().sanitize();
-    let re = Regex::new(r"\(on (.*)\)").unwrap();
+    let re = Regex::new(r"\(on (.*) CES?T\)").unwrap();
     let record_date = re
-        .find(&record_html)
+        .captures(&record_html)
+        .and_then(|c| c.get(1))
         .context(format!("Record date not found in {}", record_html))?
         .as_str();
-    let naive_dt = NaiveDateTime::parse_from_str(record_date, "(on %b %d %Y, %H:%M:%S CET)")
-        .context(format!("Failed to parse date {}", record_date))?;
-    let utc_time = CET
+
+    let naive_dt = NaiveDateTime::parse_from_str(record_date, "%b %d %Y, %H:%M:%S").context(
+        format!("Failed to parse online record date {}", record_date),
+    )?;
+    let utc_time = Stockholm
         .from_local_datetime(&naive_dt)
         .unwrap()
         .with_timezone(&Utc);
@@ -152,7 +155,7 @@ pub async fn parse_worlds_page(response: Response) -> Result<WorldsResponse> {
             .and_then(|e| e.value().attr("onmouseover"));
 
         let battl_eye_date = battl_eye_attr.map_or_else(
-            || -> Result<Option<DateTime<Utc>>> { Ok(None) },
+            || -> Result<Option<NaiveDate>> { Ok(None) },
             |s| {
                 if s.contains("release") {
                     return Ok(None);
@@ -163,16 +166,10 @@ pub async fn parse_worlds_page(response: Response) -> Result<WorldsResponse> {
                 match re.find(s) {
                     Some(mat) => {
                         let s = mat.as_str();
-                        let naive_dt = NaiveDate::parse_from_str(s, "since %B %d, %Y.")
-                            .context(format!("Failed to parse date {}", s))?
-                            .and_hms_opt(0, 0, 0)
-                            .context("Could not add time to Date")?;
-                        let utc_time: DateTime<Utc> = CET
-                            .from_local_datetime(&naive_dt)
-                            .unwrap()
-                            .with_timezone(&Utc);
+                        let naive_date = NaiveDate::parse_from_str(s, "since %B %d, %Y.")
+                            .context(format!("Failed to parse date {}", s))?;
 
-                        Ok(Some(utc_time))
+                        Ok(Some(naive_date))
                     }
                     None => Ok(None),
                 }

@@ -1,8 +1,6 @@
 use std::collections::HashMap;
 
-use crate::models::{
-    GameWorldType, Location, Player, PvpType, TransferType, Vocation, WorldDetails,
-};
+use crate::models::{GameWorldType, Location, Player, PvpType, Vocation, WorldDetails};
 use crate::{prelude::*, AppState};
 use anyhow::{anyhow, Context, Result};
 use axum::extract::Path;
@@ -11,7 +9,7 @@ use axum::{extract::State, Json};
 use capitalize::Capitalize;
 use chrono::prelude::*;
 use chrono::{TimeZone, Utc};
-use chrono_tz::CET;
+use chrono_tz::Europe::Stockholm;
 use regex::Regex;
 use reqwest::{Client, Response, StatusCode};
 use scraper::Selector;
@@ -118,7 +116,7 @@ pub async fn parse_world_details_page(
         players_online_count: 0,
         players_online_record: 0,
         players_online_record_date: Utc::now(),
-        creation_date: Utc::now(),
+        creation_date: NaiveDate::from_ymd_opt(1, 1, 1).unwrap(),
         location: Location::Europe,
         pvp_type: PvpType::Open,
         world_quest_titles: vec![],
@@ -163,15 +161,18 @@ pub async fn parse_world_details_page(
                     .context(format!("Failed to parse online record {}", online_record))?;
                 world_details.players_online_record = online_record;
 
-                let re = Regex::new(r"\(on (.*)\)").unwrap();
+                let re = Regex::new(r"\(on (.*) CES?T\)").unwrap();
                 let record_date = re
-                    .find(&record_html)
+                    .captures(&record_html)
+                    .and_then(|c| c.get(1))
                     .context(format!("Record date not found in {}", record_html))?
                     .as_str();
+
                 let naive_dt =
-                    NaiveDateTime::parse_from_str(record_date, "(on %b %d %Y, %H:%M:%S CEST)")
-                        .context(format!("Failed to parse date {}", record_date))?;
-                let utc_time = CET
+                    NaiveDateTime::parse_from_str(record_date, "%b %d %Y, %H:%M:%S").context(
+                        format!("Failed to parse online record date {}", record_date),
+                    )?;
+                let utc_time = Stockholm
                     .from_local_datetime(&naive_dt)
                     .unwrap()
                     .with_timezone(&Utc);
@@ -179,7 +180,11 @@ pub async fn parse_world_details_page(
             }
             "Creation Date:" => {
                 let date_html = &value.inner_html().sanitize();
-                // TODO: Date
+                let date_html = format!("01 {date_html}");
+
+                let naive_date = NaiveDate::parse_from_str(&date_html, "%d %B %Y")
+                    .context(format!("Failed to parse creation date {}", &date_html))?;
+                world_details.creation_date = naive_date;
             }
             "Location:" => {
                 world_details.location = value.inner_html().parse()?;
@@ -206,16 +211,10 @@ pub async fn parse_world_details_page(
 
                     let re = Regex::new(r"since (.*)\.").expect("Invalid regex");
                     let s = re.find(&string).context("Date not found")?.as_str();
-                    let naive_dt = NaiveDate::parse_from_str(&s, "since %B %d, %Y.")
-                        .context(format!("Failed to parse date {}", s))?
-                        .and_hms_opt(0, 0, 0)
-                        .context("Could not add time to Date")?;
-                    let utc_time: DateTime<Utc> = CET
-                        .from_local_datetime(&naive_dt)
-                        .unwrap()
-                        .with_timezone(&Utc);
+                    let naive_date = NaiveDate::parse_from_str(s, "since %B %d, %Y.")
+                        .context(format!("Failed to parse BattlEye date {}", s))?;
 
-                    world_details.battl_eye_date = Some(utc_time);
+                    world_details.battl_eye_date = Some(naive_date);
                 } else {
                     world_details.battl_eye = false;
                 }
