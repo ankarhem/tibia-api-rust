@@ -56,6 +56,10 @@ fn app() -> Router {
             "/api/v1/worlds/:world_name/kill-statistics",
             get(handlers::worlds_world_name_kill_statistics::get),
         )
+        .route(
+            "/api/v1/worlds/:world_name/residences",
+            get(handlers::worlds_world_name_residences::get),
+        )
         .route("/", get(handlers::redocly::redirect_redocly))
         .route("/api-docs", get(handlers::redocly::serve_redocly))
         .route("/__healthcheck", get(handlers::__healthcheck::get))

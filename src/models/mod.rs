@@ -1,5 +1,6 @@
 mod game_world_type;
 mod guild;
+mod residence;
 mod kill_statistics;
 mod location;
 mod player;
@@ -11,6 +12,7 @@ mod worlds;
 
 pub use game_world_type::*;
 pub use guild::*;
+pub use residence::*;
 pub use kill_statistics::*;
 pub use location::*;
 pub use player::*;
