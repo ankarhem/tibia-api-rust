@@ -7,7 +7,7 @@ use axum::{
     Json,
 };
 use capitalize::Capitalize;
-use reqwest::{Client, Response, StatusCode};
+use reqwest::{Response, StatusCode};
 use reqwest_middleware::ClientWithMiddleware;
 use scraper::Selector;
 use tracing::instrument;

@@ -12,7 +12,7 @@ use capitalize::Capitalize;
 use chrono::{prelude::*, TimeZone, Utc};
 use chrono_tz::Europe::Stockholm;
 use regex::Regex;
-use reqwest::{Client, Response, StatusCode};
+use reqwest::{Response, StatusCode};
 use reqwest_middleware::ClientWithMiddleware;
 use scraper::Selector;
 use serde::{Deserialize, Serialize};
