@@ -54,6 +54,13 @@ fn app() -> Router {
             "/api/v1/worlds/:world_name/kill-statistics",
             get(handlers::worlds_world_name_kill_statistics::get),
         )
+        .route("/", get(handlers::redocly::redirect_redocly))
+        .route("/api-docs", get(handlers::redocly::serve_redocly))
+        .route("/__healthcheck", get(handlers::__healthcheck::get))
+        .fallback_service(public_service)
+        .with_state(app_state)
+        .route("/openapi.json", get(handlers::redocly::serve_openapi))
+        .with_state(openapi_docs)
         .layer(CompressionLayer::new())
         .layer(
             CorsLayer::new()
@@ -85,14 +92,6 @@ fn app() -> Router {
                 ),
         )
         .layer(RequestIdLayer)
-        .with_state(app_state)
-        .route("/openapi.json", get(handlers::redocly::serve_openapi))
-        .with_state(openapi_docs)
-        // Omit these from the logs etc.
-        .route("/", get(handlers::redocly::redirect_redocly))
-        .route("/api-docs", get(handlers::redocly::serve_redocly))
-        .route("/__healthcheck", get(handlers::__healthcheck::get))
-        .fallback_service(public_service)
 }
 
 pub async fn run(listener: TcpListener) -> Result<()> {
