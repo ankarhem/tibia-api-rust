@@ -5,7 +5,7 @@ use axum::{extract::State, Json};
 use chrono::{prelude::*, TimeZone, Utc};
 use chrono_tz::Europe::Stockholm;
 use regex::Regex;
-use reqwest::{Response};
+use reqwest::Response;
 use reqwest_middleware::ClientWithMiddleware;
 use scraper::Selector;
 use tracing::instrument;
