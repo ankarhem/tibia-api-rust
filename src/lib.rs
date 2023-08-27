@@ -5,6 +5,7 @@ use anyhow::Result;
 use axum::{body::Body, http::Request, routing::get, Router};
 use once_cell::sync::Lazy;
 use reqwest::{Client, Method};
+use tower_http::classify::StatusInRangeAsFailures;
 use tower_http::compression::CompressionLayer;
 use tower_http::cors::{Any, CorsLayer};
 use tower_http::services::ServeDir;
@@ -60,22 +61,26 @@ fn app() -> Router {
                 .allow_origin(Any),
         )
         .layer(
-            // Let's create a tracing span for each request
-            TraceLayer::new_for_http().make_span_with(|request: &Request<Body>| {
-                // We get the request id from the extensions
-                let request_id = request
-                    .extensions()
-                    .get::<RequestId>()
-                    .map(ToString::to_string)
-                    .unwrap_or_else(|| "unknown".into());
-                // And then we put it along with other information into the `request` span
-                info_span!(
-                    "request",
-                    id = %request_id,
-                    method = %request.method(),
-                    uri = %request.uri(),
-                )
-            }),
+            TraceLayer::new(StatusInRangeAsFailures::new(400..=599).into_make_classifier())
+                // Let's create a tracing span for each request
+                .make_span_with(|request: &Request<Body>| {
+                    // We get the request id from the extensions
+                    let request_id = request
+                        .extensions()
+                        .get::<RequestId>()
+                        .map(ToString::to_string)
+                        .unwrap_or_else(|| "unknown".into());
+                    // And then we put it along with other information into the `request` span
+                    info_span!(
+                        "request",
+                        id = %request_id,
+                        method = %request.method(),
+                        uri = %request.uri(),
+                    )
+                })
+                .on_response(
+                    tower_http::trace::DefaultOnResponse::new().level(tracing::Level::INFO),
+                ),
         )
         .layer(RequestIdLayer)
         .with_state(app_state)
