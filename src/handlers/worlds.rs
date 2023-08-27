@@ -1,16 +1,19 @@
 use std::collections::HashMap;
 
-use crate::models::{GameWorldType, TransferType, World, WorldsResponse};
-use crate::{prelude::*, AppState};
 use anyhow::{Context, Result};
 use axum::{extract::State, Json};
-use chrono::prelude::*;
-use chrono::{TimeZone, Utc};
+use chrono::{prelude::*, TimeZone, Utc};
 use chrono_tz::Europe::Stockholm;
 use regex::Regex;
 use reqwest::{Client, Response};
 use scraper::Selector;
 use tracing::instrument;
+
+use crate::{
+    models::{GameWorldType, TransferType, World, WorldsResponse},
+    prelude::*,
+    AppState,
+};
 
 /// Worlds
 ///

@@ -5,11 +5,13 @@ use anyhow::Result;
 use axum::{body::Body, http::Request, routing::get, Router};
 use once_cell::sync::Lazy;
 use reqwest::{Client, Method};
-use tower_http::classify::StatusInRangeAsFailures;
-use tower_http::compression::CompressionLayer;
-use tower_http::cors::{Any, CorsLayer};
-use tower_http::services::ServeDir;
-use tower_http::trace::TraceLayer;
+use tower_http::{
+    classify::StatusInRangeAsFailures,
+    compression::CompressionLayer,
+    cors::{Any, CorsLayer},
+    services::ServeDir,
+    trace::TraceLayer,
+};
 use tower_request_id::{RequestId, RequestIdLayer};
 use tracing::info_span;
 

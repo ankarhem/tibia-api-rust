@@ -1,17 +1,22 @@
 use std::collections::HashMap;
 
 use anyhow::{Context, Result};
-use axum::extract::State;
-use axum::Json;
-use axum::{extract::Path, response::IntoResponse};
+use axum::{
+    extract::{Path, State},
+    response::IntoResponse,
+    Json,
+};
 use capitalize::Capitalize;
 use reqwest::{Client, Response, StatusCode};
 use scraper::Selector;
 use tracing::instrument;
 
 use super::worlds_world_name::WorldParams;
-use crate::models::{KillStatistics, KilledAmounts, RaceKillStatistics};
-use crate::{prelude::*, AppState};
+use crate::{
+    models::{KillStatistics, KilledAmounts, RaceKillStatistics},
+    prelude::*,
+    AppState,
+};
 
 /// Kill Statistics
 ///

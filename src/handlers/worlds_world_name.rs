@@ -3,12 +3,13 @@ use std::collections::HashMap;
 use crate::models::{GameWorldType, Location, Player, PvpType, Vocation, WorldDetails};
 use crate::{prelude::*, AppState};
 use anyhow::{anyhow, Context, Result};
-use axum::extract::Path;
-use axum::response::IntoResponse;
-use axum::{extract::State, Json};
+use axum::{
+    extract::{Path, State},
+    response::IntoResponse,
+    Json,
+};
 use capitalize::Capitalize;
-use chrono::prelude::*;
-use chrono::{TimeZone, Utc};
+use chrono::{prelude::*, TimeZone, Utc};
 use chrono_tz::Europe::Stockholm;
 use regex::Regex;
 use reqwest::{Client, Response, StatusCode};
