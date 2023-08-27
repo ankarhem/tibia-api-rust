@@ -1,10 +1,12 @@
 use std::net::{SocketAddr, TcpListener};
 use std::time::Duration;
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use axum::{body::Body, http::Request, routing::get, Router};
+use http_cache_reqwest::{CACacheManager, Cache, CacheMode, HttpCache, HttpCacheOptions};
 use once_cell::sync::Lazy;
 use reqwest::{Client, Method};
+use reqwest_middleware::{ClientBuilder, ClientWithMiddleware};
 use tower_http::{
     classify::StatusInRangeAsFailures,
     compression::CompressionLayer,
@@ -25,7 +27,7 @@ use utils::*;
 
 #[derive(Clone)]
 pub struct AppState {
-    client: reqwest::Client,
+    client: ClientWithMiddleware,
 }
 
 fn app() -> Router {
@@ -138,8 +140,8 @@ pub fn spawn_app() -> SocketAddr {
     addr
 }
 
-pub fn create_client() -> Result<Client, reqwest::Error> {
-    Client::builder()
+pub fn create_client() -> Result<ClientWithMiddleware> {
+    let reqwest_client = Client::builder()
         .user_agent(
             "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:109.0) Gecko/20100101 Firefox/113.0",
         )
@@ -149,4 +151,15 @@ pub fn create_client() -> Result<Client, reqwest::Error> {
         .pool_idle_timeout(Duration::from_secs(15))
         .pool_max_idle_per_host(10)
         .build()
+        .context("Failed to create reqwest client")?;
+
+    let client = ClientBuilder::new(reqwest_client)
+        .with(Cache(HttpCache {
+            mode: CacheMode::Default,
+            manager: CACacheManager::default(),
+            options: HttpCacheOptions::default(),
+        }))
+        .build();
+
+    Ok(client)
 }

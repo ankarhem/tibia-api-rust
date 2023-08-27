@@ -8,6 +8,7 @@ use axum::{
 };
 use capitalize::Capitalize;
 use reqwest::{Client, Response, StatusCode};
+use reqwest_middleware::ClientWithMiddleware;
 use scraper::Selector;
 use tracing::instrument;
 
@@ -54,7 +55,10 @@ pub async fn get(
 }
 
 #[instrument(skip(client))]
-async fn fetch_guilds_page(client: &Client, world_name: &str) -> Result<Response> {
+async fn fetch_guilds_page(
+    client: &ClientWithMiddleware,
+    world_name: &str,
+) -> Result<Response, reqwest_middleware::Error> {
     let mut params = HashMap::new();
     params.insert("subtopic", "guilds");
     params.insert("world", world_name);

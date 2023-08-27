@@ -22,6 +22,8 @@ pub enum ServerError {
     #[error(transparent)]
     FetchError(#[from] reqwest::Error),
     #[error(transparent)]
+    MiddlewareError(#[from] reqwest_middleware::Error),
+    #[error(transparent)]
     UnexpectedError(#[from] anyhow::Error),
 }
 
@@ -51,7 +53,9 @@ impl IntoResponse for ServerError {
                 }
                 _ => StatusCode::INTERNAL_SERVER_ERROR.into_response(),
             },
-            ServerError::UnexpectedError(_) => StatusCode::INTERNAL_SERVER_ERROR.into_response(),
+            ServerError::MiddlewareError(_) | ServerError::UnexpectedError(_) => {
+                StatusCode::INTERNAL_SERVER_ERROR.into_response()
+            }
         }
     }
 }

@@ -13,6 +13,7 @@ use chrono::{prelude::*, TimeZone, Utc};
 use chrono_tz::Europe::Stockholm;
 use regex::Regex;
 use reqwest::{Client, Response, StatusCode};
+use reqwest_middleware::ClientWithMiddleware;
 use scraper::Selector;
 use serde::{Deserialize, Serialize};
 use tracing::instrument;
@@ -68,7 +69,10 @@ pub async fn get(
 }
 
 #[instrument(skip(client))]
-pub async fn fetch_world_details_page(client: &Client, world_name: &str) -> Result<Response> {
+pub async fn fetch_world_details_page(
+    client: &ClientWithMiddleware,
+    world_name: &str,
+) -> Result<Response, reqwest_middleware::Error> {
     let mut params = HashMap::new();
     params.insert("subtopic", "worlds");
     params.insert("world", world_name);

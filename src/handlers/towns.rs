@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use crate::prelude::*;
 use anyhow::{Context, Result};
 use axum::{extract::State, Json};
-use reqwest::Client;
+use reqwest_middleware::ClientWithMiddleware;
 use scraper::Selector;
 use tracing::instrument;
 
@@ -59,7 +59,9 @@ pub async fn get(State(state): State<AppState>) -> Result<Json<Vec<String>>, Ser
 }
 
 #[instrument(skip(client))]
-async fn fetch_towns_page(client: &Client) -> Result<reqwest::Response, reqwest::Error> {
+async fn fetch_towns_page(
+    client: &ClientWithMiddleware,
+) -> Result<reqwest::Response, reqwest_middleware::Error> {
     let mut params = HashMap::new();
     params.insert("subtopic", "houses");
 

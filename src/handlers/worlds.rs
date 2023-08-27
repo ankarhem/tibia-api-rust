@@ -6,6 +6,7 @@ use chrono::{prelude::*, TimeZone, Utc};
 use chrono_tz::Europe::Stockholm;
 use regex::Regex;
 use reqwest::{Client, Response};
+use reqwest_middleware::ClientWithMiddleware;
 use scraper::Selector;
 use tracing::instrument;
 
@@ -46,7 +47,9 @@ pub async fn get(State(state): State<AppState>) -> Result<Json<WorldsResponse>, 
 }
 
 #[instrument(skip(client))]
-async fn fetch_worlds_page(client: &Client) -> Result<Response> {
+async fn fetch_worlds_page(
+    client: &ClientWithMiddleware,
+) -> Result<Response, reqwest_middleware::Error> {
     let mut params = HashMap::new();
     params.insert("subtopic", "worlds");
     let response = client.get(COMMUNITY_URL).query(&params).send().await?;
