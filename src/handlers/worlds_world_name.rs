@@ -110,7 +110,6 @@ pub async fn parse_world_details_page(
     let information_table = tables
         .next()
         .context(format!("Information table not found"))?;
-    let players_online_table = tables.next().context("Players online table not found")?;
 
     let cell_selector = Selector::parse("td").expect("Invalid selector for table cell");
     let mut information_cells = information_table.select(&cell_selector);
@@ -249,31 +248,35 @@ pub async fn parse_world_details_page(
         }
     }
 
-    let player_cell_selector =
-        Selector::parse("tr.Odd > td, tr.Even > td").expect("Invalid selector for player cell");
-    let mut player_cells = players_online_table.select(&player_cell_selector);
+    // Only try to parse players table if there are players online
+    if world_details.players_online_count > 0 {
+        let players_online_table = tables.next().context("Players online table not found")?;
+        let player_cell_selector =
+            Selector::parse("tr.Odd > td, tr.Even > td").expect("Invalid selector for player cell");
+        let mut player_cells = players_online_table.select(&player_cell_selector);
 
-    while let (Some(name), Some(level), Some(vocation)) = (
-        player_cells.next(),
-        player_cells.next(),
-        player_cells.next(),
-    ) {
-        let vocation_string = vocation.inner_html().sanitize();
-        let vocation: Option<Vocation> = match vocation_string.as_str() {
-            "None" => None,
-            _ => Some(vocation_string.parse()?),
-        };
-        let player_name = name
-            .text()
-            .next()
-            .context("Player name not found")?
-            .to_string();
-        let player = Player {
-            name: player_name,
-            level: level.inner_html().parse()?,
-            vocation,
-        };
-        world_details.players_online.push(player);
+        while let (Some(name), Some(level), Some(vocation)) = (
+            player_cells.next(),
+            player_cells.next(),
+            player_cells.next(),
+        ) {
+            let vocation_string = vocation.inner_html().sanitize();
+            let vocation: Option<Vocation> = match vocation_string.as_str() {
+                "None" => None,
+                _ => Some(vocation_string.parse()?),
+            };
+            let player_name = name
+                .text()
+                .next()
+                .context("Player name not found")?
+                .to_string();
+            let player = Player {
+                name: player_name,
+                level: level.inner_html().parse()?,
+                vocation,
+            };
+            world_details.players_online.push(player);
+        }
     }
 
     Ok(Some(world_details))

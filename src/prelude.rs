@@ -20,11 +20,11 @@ pub fn error_chain_fmt(
 #[derive(thiserror::Error)]
 pub enum ServerError {
     #[error(transparent)]
-    FetchError(#[from] reqwest::Error),
+    Reqwest(#[from] reqwest::Error),
     #[error(transparent)]
-    MiddlewareError(#[from] reqwest_middleware::Error),
+    Middleware(#[from] reqwest_middleware::Error),
     #[error(transparent)]
-    UnexpectedError(#[from] anyhow::Error),
+    Unexpected(#[from] anyhow::Error),
 }
 
 #[derive(serde::Serialize, serde::Deserialize, ToSchema)]
@@ -42,7 +42,7 @@ impl std::fmt::Debug for ServerError {
 impl IntoResponse for ServerError {
     fn into_response(self) -> axum::response::Response {
         match self {
-            ServerError::FetchError(e) => match e.status() {
+            ServerError::Reqwest(e) => match e.status() {
                 Some(StatusCode::NOT_FOUND) => StatusCode::NOT_FOUND.into_response(),
                 Some(_) => {
                     let body = PublicErrorBody {
@@ -53,7 +53,7 @@ impl IntoResponse for ServerError {
                 }
                 _ => StatusCode::INTERNAL_SERVER_ERROR.into_response(),
             },
-            ServerError::MiddlewareError(_) | ServerError::UnexpectedError(_) => {
+            ServerError::Middleware(_) | ServerError::Unexpected(_) => {
                 StatusCode::INTERNAL_SERVER_ERROR.into_response()
             }
         }
