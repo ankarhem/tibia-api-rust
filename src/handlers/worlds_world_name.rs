@@ -107,9 +107,7 @@ pub async fn parse_world_details_page(
 
     // skip first table
     tables.next();
-    let information_table = tables
-        .next()
-        .context(format!("Information table not found"))?;
+    let information_table = tables.next().context("Information table not found")?;
 
     let cell_selector = Selector::parse("td").expect("Invalid selector for table cell");
     let mut information_cells = information_table.select(&cell_selector);
@@ -156,7 +154,7 @@ pub async fn parse_world_details_page(
 
                 let online_record = re
                     .find(&record_html)
-                    .context(format!("Online record not found"))?
+                    .context("Online record not found")?
                     .as_str()
                     .replace(',', "");
 
