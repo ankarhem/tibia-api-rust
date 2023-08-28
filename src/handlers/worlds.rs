@@ -179,13 +179,22 @@ async fn parse_worlds_page(response: Response) -> Result<WorldsResponse> {
                 }
             },
         )?;
+
+        let players_online = players_online.inner_html().sanitize().replace(',', "");
+        let players_online = match players_online.as_str() {
+            "off" => 0,
+            any => any.parse().context(format!(
+                "Failed to parse players online count {}",
+                players_online
+            ))?,
+        };
         let world = World {
             name: name
                 .select(&name_selector)
                 .next()
                 .context("World name not found")?
                 .inner_html(),
-            players_online_count: players_online.inner_html().replace(',', "").parse()?,
+            players_online_count: players_online,
             location: location.inner_html().parse()?,
             pvp_type: pvp_type.inner_html().parse().unwrap(),
             battl_eye: !battl_eye.inner_html().is_empty(),
