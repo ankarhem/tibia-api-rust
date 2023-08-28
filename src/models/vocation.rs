@@ -32,4 +32,3 @@ impl std::str::FromStr for Vocation {
         }
     }
 }
-

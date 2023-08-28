@@ -56,6 +56,10 @@ fn app() -> Router {
             "/api/v1/worlds/:world_name/kill-statistics",
             get(handlers::worlds_world_name_kill_statistics::get),
         )
+        .route(
+            "/api/v1/worlds/:world_name/residences",
+            get(handlers::worlds_world_name_residences::get),
+        )
         .route("/", get(handlers::redocly::redirect_redocly))
         .route("/api-docs", get(handlers::redocly::serve_redocly))
         .route("/__healthcheck", get(handlers::__healthcheck::get))
@@ -155,7 +159,8 @@ pub fn create_client() -> Result<ClientWithMiddleware> {
 
     let client = ClientBuilder::new(reqwest_client)
         .with(Cache(HttpCache {
-            mode: CacheMode::Default,
+            // Figure out how to use cache even though tibia sends incorrect cache headers
+            mode: CacheMode::NoStore,
             manager: CACacheManager::default(),
             options: HttpCacheOptions::default(),
         }))

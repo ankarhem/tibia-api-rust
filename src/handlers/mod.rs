@@ -14,3 +14,5 @@ pub mod worlds_world_name;
 pub mod worlds_world_name_guilds;
 /// /worlds/:world_name/kill-statistics
 pub mod worlds_world_name_kill_statistics;
+/// /worlds/:world_name/residences
+pub mod worlds_world_name_residences;

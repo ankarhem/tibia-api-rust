@@ -16,6 +16,7 @@ pub fn create_openapi_docs() -> openapi::OpenApi {
             handlers::worlds_world_name::get,
             handlers::worlds_world_name_guilds::get,
             handlers::worlds_world_name_kill_statistics::get,
+            handlers::worlds_world_name_residences::get,
         ),
         components(schemas(
             PublicErrorBody,
@@ -32,6 +33,9 @@ pub fn create_openapi_docs() -> openapi::OpenApi {
             KillStatistics,
             KilledAmounts,
             RaceKillStatistics,
+            Residence,
+            ResidenceType,
+            ResidenceStatus,
         )),
         tags()
     )]
