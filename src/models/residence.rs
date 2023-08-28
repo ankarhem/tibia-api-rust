@@ -17,8 +17,10 @@ pub enum ResidenceType {
 pub enum ResidenceStatus {
     Rented,
     AuctionNoBid,
+    #[serde(rename_all = "camelCase")]
     AuctionWithBid {
         bid: u32,
+        #[schema(value_type = String, format = DateTime)]
         expiry_time: DateTime<Utc>,
     },
     AuctionFinished {

@@ -35,6 +35,7 @@ pub fn create_openapi_docs() -> openapi::OpenApi {
             RaceKillStatistics,
             Residence,
             ResidenceType,
+            ResidenceStatus,
         )),
         tags()
     )]
