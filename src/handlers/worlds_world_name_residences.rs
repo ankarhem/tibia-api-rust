@@ -68,8 +68,8 @@ pub async fn get_world_residences(
     world_name: &str,
     residence_type: &ResidenceType,
 ) -> Result<Option<Vec<Residence>>> {
-    let response = fetch_residences_page(&client, &world_name, &residence_type).await?;
-    let houses = parse_residences_page(response, &residence_type).await?;
+    let response = fetch_residences_page(client, world_name, residence_type).await?;
+    let houses = parse_residences_page(response, residence_type).await?;
 
     Ok(houses)
 }
@@ -87,7 +87,7 @@ async fn fetch_residences_page(
         ResidenceType::House => "houses",
         ResidenceType::Guildhall => "guildhalls",
     };
-    params.insert("type", &residence_string);
+    params.insert("type", residence_string);
     let response = client.get(COMMUNITY_URL).query(&params).send().await?;
 
     Ok(response)
