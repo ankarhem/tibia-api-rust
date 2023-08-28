@@ -1,28 +1,26 @@
-use core::panicking::panic;
-use std::{collections::HashMap, sync::Arc};
+use std::collections::HashMap;
 
-use anyhow::{Context, Result};
+use anyhow::{anyhow, Context, Result};
 use axum::{
     extract::{Path, State},
     response::IntoResponse,
     Json,
 };
 use capitalize::Capitalize;
-use futures::{stream, StreamExt};
+use chrono::{Duration, Timelike};
+use itertools::Itertools;
+use regex::Regex;
 use reqwest::{Response, StatusCode};
 use reqwest_middleware::ClientWithMiddleware;
 use scraper::Selector;
-use tokio::{sync::Mutex, task::JoinHandle};
 use tracing::instrument;
 
 use super::worlds_world_name::WorldParams;
 use crate::{
-    models::{Residence, ResidenceType},
+    models::{Residence, ResidenceStatus, ResidenceType},
     prelude::*,
     AppState,
 };
-
-const PARALLEL_REQUESTS: usize = 2;
 
 /// Residences
 ///
@@ -48,44 +46,32 @@ pub async fn get(
     let client = &state.client;
     let world_name = path_params.world_name.capitalize();
 
-    let residences: Arc<Mutex<Option<Vec<Residence>>>> = Arc::new(Mutex::new(Some(vec![])));
+    let houses = get_world_residences(client, &world_name, &ResidenceType::House);
+    let guildhalls = get_world_residences(client, &world_name, &ResidenceType::Guildhall);
 
-    let handle: JoinHandle<Result<Option<bool>>> = tokio::spawn(async move {
-        let residence_type = ResidenceType::House;
-        let client = client.clone();
-        unsafe {}
-        let response = fetch_residences_page(&client, &world_name, &residence_type)
-            .await
-            .map_err(|e| {
-                tracing::error!("Failed to fetch residences page: {:?}", e);
-                e
-            })?;
-        let mut houses = parse_residences_page(response, &residence_type)
-            .await
-            .map_err(|e| {
-                tracing::error!("Failed to parse residences page: {:?}", e);
-                e
-            })?;
-
-        let mut residences = residences.clone().lock().await;
-        match (*residences, houses) {
-            (Some(mut residences), Some(mut houses)) => {
-                residences.append(&mut houses);
-                Ok(Some(true))
-            }
-            (_, None) => {
-                *residences = None;
-                Ok(None)
-            }
-            _ => {
-                *residences = None;
-                Ok(None)
-            }
+    match futures::join!(houses, guildhalls) {
+        (Ok(Some(mut houses)), Ok(Some(guildhalls))) => {
+            houses.extend(guildhalls);
+            Ok(Json(houses).into_response())
         }
-    });
+        (Ok(None), _) | (_, Ok(None)) => Ok(StatusCode::NOT_FOUND.into_response()),
+        (_, Err(e)) | (Err(e), _) => {
+            tracing::error!("Failed to fetch residences: {:?}", e);
+            Err(e.into())
+        }
+    }
+}
 
-    let mut residences = residences.lock().await;
-    Ok(Json(*residences))
+#[instrument(skip(client))]
+pub async fn get_world_residences(
+    client: &ClientWithMiddleware,
+    world_name: &str,
+    residence_type: &ResidenceType,
+) -> Result<Option<Vec<Residence>>> {
+    let response = fetch_residences_page(&client, &world_name, &residence_type).await?;
+    let houses = parse_residences_page(response, &residence_type).await?;
+
+    Ok(houses)
 }
 
 #[instrument(skip(client))]
@@ -155,12 +141,73 @@ async fn parse_residences_page(
             .map(|s| s * 1000)
             .context(format!("Failed to parse rent: {}", rent))?;
 
+        let value = status.to_string().sanitize();
+        let status = match value.as_str() {
+            "rented" => ResidenceStatus::Rented,
+            "auction (no bid yet)" => ResidenceStatus::AuctionNoBid,
+            _ => {
+                let gold_re = Regex::new(r"(\d+) gold").expect("Invalid residence gold regex");
+                let gold_str = gold_re
+                    .captures(&value)
+                    .and_then(|m| m.get(1))
+                    .map(|g| g.as_str())
+                    .context(format!("Expected gold in residence status: `{}`", value))?;
+                let gold = gold_str
+                    .parse::<u32>()
+                    .context(format!("Failed to parse gold `{:?}`", gold_str))?;
+
+                if value.contains("finished") {
+                    ResidenceStatus::AuctionFinished { bid: gold }
+                } else {
+                    let time_re = Regex::new(r"(\d+) (days?|hours?) left")
+                        .expect("Invalid residence time regex");
+                    let time_matches = time_re
+                        .captures(&value)
+                        .context(format!("Time not found: `{}`", value))?;
+
+                    let time = time_matches
+                        .get(1)
+                        .map(|t| t.as_str())
+                        .and_then(|t| t.parse().ok());
+                    let time_unit = time_matches.get(2).map(|u| u.as_str());
+
+                    // current date time without minutes / seconds
+                    let current_dt = chrono::Utc::now()
+                        .with_minute(0)
+                        .and_then(|d| d.with_second(0))
+                        .and_then(|d| d.with_nanosecond(0))
+                        .context("Failed to construct current time")?;
+
+                    match (time, time_unit) {
+                        (Some(time), Some(unit)) => {
+                            let duration = match unit {
+                                "day" | "days" => Duration::days(time),
+                                "hour" | "hours" => Duration::hours(time),
+                                // Because of the regex this cannot happen
+                                _ => panic!("Invalid time unit"),
+                            };
+
+                            let expires_dt =
+                                current_dt.checked_add_signed(duration).context(format!(
+                                    "Failed to calculate expiry time `{time}` with unit `{unit}`"
+                                ))?;
+                            ResidenceStatus::AuctionWithBid {
+                                bid: gold,
+                                expiry_time: expires_dt,
+                            }
+                        }
+                        _ => return Err(anyhow!(format!("Time and unit not found: `{}`", value))),
+                    }
+                }
+            }
+        };
+
         let residence = Residence {
             residence_type: *residence_type,
             name: name.to_string().sanitize(),
             size,
             rent,
-            status: status.to_string().sanitize(),
+            status,
         };
 
         residences.push(residence)

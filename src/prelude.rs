@@ -74,5 +74,6 @@ impl Sanitizable for String {
             .replace("\\u0026#39;", "'")
             .replace("&nbsp;", " ")
             .replace("&amp;", "&")
+            .replace(' ', " ")
     }
 }
