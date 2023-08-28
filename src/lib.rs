@@ -159,7 +159,8 @@ pub fn create_client() -> Result<ClientWithMiddleware> {
 
     let client = ClientBuilder::new(reqwest_client)
         .with(Cache(HttpCache {
-            mode: CacheMode::Default,
+            // Figure out how to use cache even though tibia sends incorrect cache headers
+            mode: CacheMode::NoStore,
             manager: CACacheManager::default(),
             options: HttpCacheOptions::default(),
         }))
