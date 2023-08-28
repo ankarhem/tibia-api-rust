@@ -1,4 +1,5 @@
-use std::collections::HashMap;
+use core::panicking::panic;
+use std::{collections::HashMap, sync::Arc};
 
 use anyhow::{Context, Result};
 use axum::{
@@ -7,9 +8,11 @@ use axum::{
     Json,
 };
 use capitalize::Capitalize;
+use futures::{stream, StreamExt};
 use reqwest::{Response, StatusCode};
 use reqwest_middleware::ClientWithMiddleware;
 use scraper::Selector;
+use tokio::{sync::Mutex, task::JoinHandle};
 use tracing::instrument;
 
 use super::worlds_world_name::WorldParams;
@@ -18,7 +21,8 @@ use crate::{
     prelude::*,
     AppState,
 };
-use itertools::Itertools;
+
+const PARALLEL_REQUESTS: usize = 2;
 
 /// Residences
 ///
@@ -44,25 +48,44 @@ pub async fn get(
     let client = &state.client;
     let world_name = path_params.world_name.capitalize();
 
-    let residence_type = ResidenceType::House;
+    let residences: Arc<Mutex<Option<Vec<Residence>>>> = Arc::new(Mutex::new(Some(vec![])));
 
-    let response = fetch_residences_page(client, &world_name, &residence_type)
-        .await
-        .map_err(|e| {
-            tracing::error!("Failed to fetch residences page: {:?}", e);
-            e
-        })?;
-    let guilds = parse_residences_page(response, &residence_type)
-        .await
-        .map_err(|e| {
-            tracing::error!("Failed to parse residences page: {:?}", e);
-            e
-        })?;
+    let handle: JoinHandle<Result<Option<bool>>> = tokio::spawn(async move {
+        let residence_type = ResidenceType::House;
+        let client = client.clone();
+        unsafe {}
+        let response = fetch_residences_page(&client, &world_name, &residence_type)
+            .await
+            .map_err(|e| {
+                tracing::error!("Failed to fetch residences page: {:?}", e);
+                e
+            })?;
+        let mut houses = parse_residences_page(response, &residence_type)
+            .await
+            .map_err(|e| {
+                tracing::error!("Failed to parse residences page: {:?}", e);
+                e
+            })?;
 
-    match guilds {
-        Some(g) => Ok(Json(g).into_response()),
-        None => Ok(StatusCode::NOT_FOUND.into_response()),
-    }
+        let mut residences = residences.clone().lock().await;
+        match (*residences, houses) {
+            (Some(mut residences), Some(mut houses)) => {
+                residences.append(&mut houses);
+                Ok(Some(true))
+            }
+            (_, None) => {
+                *residences = None;
+                Ok(None)
+            }
+            _ => {
+                *residences = None;
+                Ok(None)
+            }
+        }
+    });
+
+    let mut residences = residences.lock().await;
+    Ok(Json(*residences))
 }
 
 #[instrument(skip(client))]
@@ -74,7 +97,10 @@ async fn fetch_residences_page(
     let mut params = HashMap::new();
     params.insert("subtopic", "houses");
     params.insert("world", world_name);
-    let residence_string = residence_type.to_string();
+    let residence_string = match residence_type {
+        ResidenceType::House => "houses",
+        ResidenceType::Guildhall => "guildhalls",
+    };
     params.insert("type", &residence_string);
     let response = client.get(COMMUNITY_URL).query(&params).send().await?;
 

@@ -9,15 +9,6 @@ pub enum ResidenceType {
     Guildhall,
 }
 
-impl ToString for ResidenceType {
-    fn to_string(&self) -> String {
-        match self {
-            ResidenceType::House => "house".to_string(),
-            ResidenceType::Guildhall => "guildhall".to_string(),
-        }
-    }
-}
-
 #[serde_with::skip_serializing_none]
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]

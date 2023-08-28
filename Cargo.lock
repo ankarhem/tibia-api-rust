@@ -2113,6 +2113,7 @@ dependencies = [
  "capitalize",
  "chrono",
  "chrono-tz",
+ "futures",
  "http-cache-reqwest",
  "itertools",
  "log",
