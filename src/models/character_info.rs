@@ -21,6 +21,7 @@ pub struct House {
     /// The name of the house
     pub name: String,
     /// The date until which the rent is paid for
+    #[schema(value_type = Option<String>, format = Date)]
     pub paid_until: NaiveDate,
     /// The town where the house is located
     pub town: String,

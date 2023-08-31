@@ -26,7 +26,7 @@ pub struct CharacterParams {
     pub character_name: String,
 }
 
-/// World
+/// Character
 ///
 #[utoipa::path(
     get,
