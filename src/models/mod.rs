@@ -1,3 +1,4 @@
+mod character_info;
 mod game_world_type;
 mod guild;
 mod kill_statistics;
@@ -10,6 +11,7 @@ mod vocation;
 mod world_details;
 mod worlds;
 
+pub use character_info::*;
 pub use game_world_type::*;
 pub use guild::*;
 pub use kill_statistics::*;

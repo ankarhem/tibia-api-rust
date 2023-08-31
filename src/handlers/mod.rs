@@ -4,6 +4,8 @@ pub mod redocly;
 
 /// /__healthcheck
 pub mod __healthcheck;
+/// /characters/:character_name
+pub mod characters_character_name;
 /// /towns
 pub mod towns;
 /// /worlds

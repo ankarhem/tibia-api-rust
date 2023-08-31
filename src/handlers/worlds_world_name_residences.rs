@@ -117,15 +117,31 @@ async fn parse_residences_page(
     }
 
     let row_selector = Selector::parse("tr").expect("Selector to be valid");
-    let house_rows = tables.next().unwrap().select(&row_selector).skip(1);
+    let house_rows = tables
+        .next()
+        .context("Could not find house rows")?
+        .select(&row_selector)
+        .skip(1);
 
     let mut residences = vec![];
 
     for row in house_rows {
+        let id_selector = Selector::parse("input[name=\"houseid\"]").expect("Selector to be valid");
+        let id_str = row
+            .clone()
+            .select(&id_selector)
+            .next()
+            .and_then(|e| e.value().attr("value"))
+            .context("House ID not found")?
+            .sanitize();
+        let id = id_str
+            .parse::<u32>()
+            .context(format!("Failed to parse house ID: {}", id_str))?;
+
         let (name, size, rent, status) = row
             .text()
             .collect_tuple()
-            .context("Residence row does not contain 4 columns")?;
+            .context("Residence row does not contain 5 columns")?;
 
         let number_re = regex::Regex::new(r"(\d+)").unwrap();
         let size = number_re
@@ -141,7 +157,7 @@ async fn parse_residences_page(
             .map(|s| s * 1000)
             .context(format!("Failed to parse rent: {}", rent))?;
 
-        let value = status.to_string().sanitize();
+        let value = status.sanitize();
         let status = match value.as_str() {
             "rented" => ResidenceStatus::Rented,
             "auction (no bid yet)" => ResidenceStatus::AuctionNoBid,
@@ -203,8 +219,9 @@ async fn parse_residences_page(
         };
 
         let residence = Residence {
+            id,
             residence_type: *residence_type,
-            name: name.to_string().sanitize(),
+            name: name.sanitize(),
             size,
             rent,
             status,

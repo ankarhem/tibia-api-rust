@@ -42,6 +42,10 @@ fn app() -> Router {
     let public_service = ServeDir::new("public");
 
     Router::new()
+        .route(
+            "/api/v1/characters/:character_name",
+            get(handlers::characters_character_name::get),
+        )
         .route("/api/v1/towns", get(handlers::towns::get))
         .route("/api/v1/worlds", get(handlers::worlds::get))
         .route(

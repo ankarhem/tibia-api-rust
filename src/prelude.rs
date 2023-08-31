@@ -61,11 +61,25 @@ impl IntoResponse for ServerError {
 }
 
 pub trait Sanitizable {
-    fn sanitize(self) -> Self;
+    fn sanitize(self) -> String;
 }
 
 impl Sanitizable for String {
     fn sanitize(self) -> Self {
+        self.trim()
+            .replace("\\n", "")
+            .replace("\\\"", "'")
+            .replace("\\u00A0", " ")
+            .replace("\\u0026", "&")
+            .replace("\\u0026#39;", "'")
+            .replace("&nbsp;", " ")
+            .replace("&amp;", "&")
+            .replace(' ', " ")
+    }
+}
+
+impl Sanitizable for &str {
+    fn sanitize(self) -> String {
         self.trim()
             .replace("\\n", "")
             .replace("\\\"", "'")

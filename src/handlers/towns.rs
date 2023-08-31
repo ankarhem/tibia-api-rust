@@ -97,7 +97,7 @@ async fn parse_towns_page(response: reqwest::Response) -> Result<Vec<String>> {
     let mut towns: Vec<String> = vec![];
     let town_selector = Selector::parse("label").expect("Invalid selector for town");
     for town in towns_row.select(&town_selector) {
-        let town_name = town.text().collect::<String>();
+        let town_name = town.text().next().context("Town name not found")?;
 
         if !town_name.is_empty() {
             towns.push(town_name.sanitize());

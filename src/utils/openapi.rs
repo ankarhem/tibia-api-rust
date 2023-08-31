@@ -36,6 +36,10 @@ pub fn create_openapi_docs() -> openapi::OpenApi {
             Residence,
             ResidenceType,
             ResidenceStatus,
+            CharacterInfo,
+            Sex,
+            House,
+            GuildMember,
         )),
         tags()
     )]
