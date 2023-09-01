@@ -1,3 +1,4 @@
+use pretty_assertions::assert_eq;
 use reqwest::StatusCode;
 use serde_json::{json, Value};
 use tibia_api::*;

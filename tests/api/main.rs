@@ -1,4 +1,5 @@
 mod __healthcheck;
+mod characters_character_name;
 mod towns;
 mod worlds;
 mod worlds_world_name;

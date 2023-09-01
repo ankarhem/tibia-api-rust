@@ -1,5 +1,5 @@
+use pretty_assertions::assert_eq;
 use reqwest::StatusCode;
-
 use tibia_api::*;
 
 #[tokio::test]

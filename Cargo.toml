@@ -50,3 +50,6 @@ tracing-subscriber = { version = "0.3.17", features = [
 ] }
 utoipa = { version = "3.5.0", features = ["preserve_order"] }
 utoipa-redoc = { version = "0.1.0", features = ["axum"] }
+
+[dev-dependencies]
+pretty_assertions = "1.4.0"
