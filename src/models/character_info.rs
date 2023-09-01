@@ -57,8 +57,12 @@ pub struct CharacterInfo {
     pub spawn_point: String,
     /// The world the character is on
     pub world: String,
+    /// The world the character was on before the current one
+    pub former_world: Option<String>,
     /// The residences which the character owns
     pub houses: Option<Vec<House>>,
+    /// The name of the character's marriage partner
+    pub married_to: Option<String>,
     pub guild: Option<GuildMember>,
     /// The time the character last logged in
     #[schema(value_type = Option<String>, format = DateTime)]

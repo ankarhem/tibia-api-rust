@@ -123,8 +123,10 @@ pub async fn parse_character_page(
         level: 0,
         achievement_points: 0,
         world: "Antica".to_string(),
+        former_world: None,
         spawn_point: "Yalahar".to_string(),
         houses: None,
+        married_to: None,
         guild: None,
         last_login: None,
         comment: None,
@@ -132,7 +134,6 @@ pub async fn parse_character_page(
     };
 
     for row in info_rows {
-        println!("{}", row.inner_html());
         let (key, value) = row
             .select(&cell_selector)
             .collect_tuple()
@@ -147,6 +148,9 @@ pub async fn parse_character_page(
         match key.as_ref() {
             "Name:" => {
                 let value = value.text().next().context("Name not found")?;
+                if value.is_empty() {
+                    Err(anyhow!("Name is empty"))?;
+                }
                 character.name = value.sanitize();
             }
             "Former Names:" => {
@@ -161,11 +165,16 @@ pub async fn parse_character_page(
                 let value = value.text().next().context("Title not found")?;
                 let re = Regex::new(r"(.*) \((\d).*\)").unwrap();
                 let captures = re.captures(value);
-                let current_title = captures
+                let title_value = captures
                     .and_then(|c| c.get(1))
                     .map(|t| t.as_str().sanitize())
                     .context(format!("Could not parse title: {}", value))?;
-                character.title = Some(current_title);
+
+                let title = match title_value.as_ref() {
+                    "None" => None,
+                    _ => Some(title_value),
+                };
+                character.title = title;
             }
             "Sex:" => {
                 let value = value.text().next().context("Sex not found")?;
@@ -178,8 +187,11 @@ pub async fn parse_character_page(
             }
             "Vocation:" => {
                 let value = value.text().next().context("Vocation not found")?;
-                let vocation = value.parse()?;
-                character.vocation = Some(vocation);
+                let vocation = match value {
+                    "None" => None,
+                    _ => Some(value.parse()?),
+                };
+                character.vocation = vocation
             }
             "Level:" => {
                 let value = value.text().next().context("Level not found")?;
@@ -207,6 +219,13 @@ pub async fn parse_character_page(
             }
             "World:" => {
                 let value = value.text().next().context("World not found")?;
+                if value.is_empty() {
+                    return Err(anyhow!("World is empty"))?;
+                }
+                character.world = value.sanitize();
+            }
+            "Former World:" => {
+                let value = value.text().next().context("Former world not found")?;
                 if value.is_empty() {
                     return Err(anyhow!("World is empty"))?;
                 }
@@ -271,6 +290,15 @@ pub async fn parse_character_page(
                     character.houses = Some(vec![house]);
                 }
             }
+            "Married To:" => {
+                let value = value
+                    .text()
+                    .next()
+                    .context("Married to value not found")?
+                    .sanitize();
+
+                character.married_to = Some(value);
+            }
             "Guild Membership:" => {
                 let guild_name = value
                     .select(&link_selector)
@@ -295,21 +323,23 @@ pub async fn parse_character_page(
                     .next()
                     .context("Last login value not found")?
                     .sanitize();
-                let re = Regex::new(r"(.*) CES?T").unwrap();
-                let login_date = re
-                    .captures(&value)
-                    .and_then(|c| c.get(1))
-                    .context(format!("Login date not found in {}", value))?
-                    .as_str();
+                if value != "never logged in" {
+                    let re = Regex::new(r"(.*) CES?T").unwrap();
+                    let login_date = re
+                        .captures(&value)
+                        .and_then(|c| c.get(1))
+                        .context(format!("Login date not found in {}", value))?
+                        .as_str();
 
-                let naive_dt = NaiveDateTime::parse_from_str(login_date, "%b %d %Y, %H:%M:%S")
-                    .context(format!("Failed to parse online record date {}", login_date))?;
-                let utc_time = Stockholm
-                    .from_local_datetime(&naive_dt)
-                    .unwrap()
-                    .with_timezone(&Utc);
+                    let naive_dt = NaiveDateTime::parse_from_str(login_date, "%b %d %Y, %H:%M:%S")
+                        .context(format!("Failed to parse online record date {}", login_date))?;
+                    let utc_time = Stockholm
+                        .from_local_datetime(&naive_dt)
+                        .unwrap()
+                        .with_timezone(&Utc);
 
-                character.last_login = Some(utc_time);
+                    character.last_login = Some(utc_time);
+                }
             }
             "Account Status:" => {
                 let value = value.text().next().context("Premium status not found")?;
@@ -319,6 +349,10 @@ pub async fn parse_character_page(
                     _ => Err(anyhow!("Unexpected premium status: {}", value))?,
                 };
                 character.has_premium = has_premium;
+            }
+            "Comment:" => {
+                let value: String = value.text().collect::<String>();
+                character.comment = Some(value.to_string());
             }
             _ => Err(anyhow!("Unexpected key: {}", key))?,
         }
