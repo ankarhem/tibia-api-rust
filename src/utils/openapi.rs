@@ -56,7 +56,8 @@ const API_DESCRIPTION: &str = r#"
 <h1 style="margin: 0; font-size: 2.5rem;">Tibia API</h1>
 </div>
 
-This is a helper API for grabbing the data available on the [Tibia](https://www.tibia.com/) website, written in [Rust](https://www.rust-lang.org/). It is primarily a way for me to test out Rust and its ecosystem, but feel free to use it.
+This is a helper API for grabbing the data available on the [Tibia](https://www.tibia.com/) website, written in [Rust](https://www.rust-lang.org/).
+It's primarily developed for consumption by [Tibiacenter](https://www.tibiacenter.com), but feel free to use it.
 
 The source code is available on [GitHub](https://github.com/ankarhem/tibia-api-rust).
 
