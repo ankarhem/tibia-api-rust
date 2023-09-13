@@ -32,6 +32,10 @@ pub enum ResidenceStatus {
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct Residence {
+    /// The id of the residence (houseid)
+    pub id: u32,
+    #[schema(example = "Thais")]
+    pub town: String,
     #[serde(rename = "type")]
     pub residence_type: ResidenceType,
     /// The house's name

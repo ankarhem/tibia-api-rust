@@ -155,7 +155,16 @@ async fn parse_residences_page(
 
     let mut residences = vec![];
 
+    let house_id_selector = Selector::parse("input[name=\"houseid\"]").expect("Invalid selector");
+
     for row in house_rows {
+        let house_id = row
+            .select(&house_id_selector)
+            .next()
+            .and_then(|e| e.value().attr("value"))
+            .and_then(|s| s.parse::<u32>().ok())
+            .context("Failed to parse house id")?;
+
         // If it's an invalid town it will be `No <residence_type> found.`
         let column_count = row.text().count();
         if column_count == 1 {
@@ -243,11 +252,13 @@ async fn parse_residences_page(
         };
 
         let residence = Residence {
+            id: house_id,
             residence_type: *residence_type,
             name: name.to_string().sanitize(),
             size,
             rent,
             status,
+            town: town.to_string(),
         };
 
         residences.push(residence)
