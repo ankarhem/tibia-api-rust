@@ -6,13 +6,12 @@ use axum::{
     response::IntoResponse,
     Json,
 };
-use capitalize::Capitalize;
 use reqwest::{Response, StatusCode};
 use reqwest_middleware::ClientWithMiddleware;
 use scraper::Selector;
 use tracing::instrument;
 
-use super::worlds_world_name::WorldParams;
+use super::worlds_world_name::PathParams;
 use crate::{models::Guild, prelude::*, AppState};
 
 /// Guilds
@@ -21,7 +20,7 @@ use crate::{models::Guild, prelude::*, AppState};
     get,
     operation_id = "get_world_guilds",
     path = "/api/v1/worlds/{world_name}/guilds",
-    params(WorldParams),
+    params(PathParams),
     responses(
         (status = 200, description = "Success", body = [Guild]),
         (status = 404, description = "Not Found"),
@@ -34,10 +33,10 @@ use crate::{models::Guild, prelude::*, AppState};
 #[instrument(name = "Get Guilds", skip(state))]
 pub async fn get(
     State(state): State<AppState>,
-    Path(path_params): Path<WorldParams>,
+    Path(path_params): Path<PathParams>,
 ) -> Result<impl IntoResponse, ServerError> {
     let client = &state.client;
-    let world_name = path_params.world_name.capitalize();
+    let world_name = path_params.world_name();
 
     let response = fetch_guilds_page(client, &world_name).await.map_err(|e| {
         tracing::error!("Failed to fetch guilds page: {:?}", e);
