@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+
 
 use crate::models::{GameWorldType, Location, Player, PvpType, Vocation, WorldDetails};
 use crate::{prelude::*, AppState};
@@ -13,7 +13,7 @@ use chrono::{prelude::*, TimeZone, Utc};
 use chrono_tz::Europe::Stockholm;
 use regex::Regex;
 use reqwest::{Response, StatusCode};
-use reqwest_middleware::ClientWithMiddleware;
+
 use scraper::Selector;
 use serde::{Deserialize, Serialize};
 use tracing::instrument;

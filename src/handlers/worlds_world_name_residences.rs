@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+
 
 use anyhow::{anyhow, Context, Result};
 use axum::{
@@ -10,7 +10,7 @@ use chrono::{Duration, Timelike};
 use itertools::Itertools;
 use regex::Regex;
 use reqwest::{Response, StatusCode};
-use reqwest_middleware::ClientWithMiddleware;
+
 use scraper::Selector;
 use serde::{Deserialize, Serialize};
 use tracing::instrument;
