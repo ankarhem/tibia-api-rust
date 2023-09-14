@@ -6,13 +6,12 @@ use axum::{
     response::IntoResponse,
     Json,
 };
-use capitalize::Capitalize;
 use reqwest::{Response, StatusCode};
 use reqwest_middleware::ClientWithMiddleware;
 use scraper::Selector;
 use tracing::instrument;
 
-use super::worlds_world_name::WorldParams;
+use super::worlds_world_name::PathParams;
 use crate::{
     models::{KillStatistics, KilledAmounts, RaceKillStatistics},
     prelude::*,
@@ -25,7 +24,7 @@ use crate::{
     get,
     operation_id = "get_world_kill_statistics",
     path = "/api/v1/worlds/{world_name}/kill-statistics",
-    params(WorldParams),
+    params(PathParams),
     responses(
         (status = 200, description = "Success", body = KillStatistics),
         (status = 404, description = "Not Found"),
@@ -38,10 +37,10 @@ use crate::{
 #[instrument(name = "Get Kill Statistics", skip(state))]
 pub async fn get(
     State(state): State<AppState>,
-    Path(path_params): Path<WorldParams>,
+    Path(path_params): Path<PathParams>,
 ) -> Result<impl IntoResponse, ServerError> {
     let client = &state.client;
-    let world_name = path_params.world_name.capitalize();
+    let world_name = path_params.world_name();
 
     let response = fetch_killstatistics_page(client, &world_name)
         .await

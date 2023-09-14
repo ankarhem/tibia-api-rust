@@ -2,25 +2,39 @@ use std::collections::HashMap;
 
 use anyhow::{anyhow, Context, Result};
 use axum::{
-    extract::{Path, State},
+    extract::{Path, Query, State},
     response::IntoResponse,
     Json,
 };
-use capitalize::Capitalize;
 use chrono::{Duration, Timelike};
 use itertools::Itertools;
 use regex::Regex;
 use reqwest::{Response, StatusCode};
 use reqwest_middleware::ClientWithMiddleware;
 use scraper::Selector;
+use serde::{Deserialize, Serialize};
 use tracing::instrument;
 
-use super::worlds_world_name::WorldParams;
+use super::worlds_world_name::PathParams;
 use crate::{
     models::{Residence, ResidenceStatus, ResidenceType},
     prelude::*,
     AppState,
 };
+
+#[derive(Serialize, Deserialize, Debug, utoipa::IntoParams)]
+#[into_params(parameter_in = Query)]
+pub struct QueryParams {
+    /// The town for which to fetch residences
+    #[param(example = "Thais")]
+    town: String,
+}
+
+impl QueryParams {
+    pub fn town(&self) -> String {
+        self.town.to_string()
+    }
+}
 
 /// Residences
 ///
@@ -28,7 +42,7 @@ use crate::{
     get,
     operation_id = "get_world_residences",
     path = "/api/v1/worlds/{world_name}/residences",
-    params(WorldParams),
+    params(PathParams, QueryParams),
     responses(
         (status = 200, description = "Success", body = [Residence]),
         (status = 404, description = "Not Found"),
@@ -41,13 +55,15 @@ use crate::{
 #[instrument(name = "Get Houses", skip(state))]
 pub async fn get(
     State(state): State<AppState>,
-    Path(path_params): Path<WorldParams>,
+    Path(path_params): Path<PathParams>,
+    Query(query_params): Query<QueryParams>,
 ) -> Result<impl IntoResponse, ServerError> {
     let client = &state.client;
-    let world_name = path_params.world_name.capitalize();
+    let world_name = path_params.world_name();
+    let town = query_params.town();
 
-    let houses = get_world_residences(client, &world_name, &ResidenceType::House);
-    let guildhalls = get_world_residences(client, &world_name, &ResidenceType::Guildhall);
+    let houses = get_world_residences(client, &world_name, &ResidenceType::House, &town);
+    let guildhalls = get_world_residences(client, &world_name, &ResidenceType::Guildhall, &town);
 
     match futures::join!(houses, guildhalls) {
         (Ok(Some(mut houses)), Ok(Some(guildhalls))) => {
@@ -67,9 +83,10 @@ pub async fn get_world_residences(
     client: &ClientWithMiddleware,
     world_name: &str,
     residence_type: &ResidenceType,
+    town: &str,
 ) -> Result<Option<Vec<Residence>>> {
-    let response = fetch_residences_page(client, world_name, residence_type).await?;
-    let houses = parse_residences_page(response, residence_type).await?;
+    let response = fetch_residences_page(client, world_name, residence_type, town).await?;
+    let houses = parse_residences_page(response, world_name, residence_type, town).await?;
 
     Ok(houses)
 }
@@ -79,10 +96,12 @@ async fn fetch_residences_page(
     client: &ClientWithMiddleware,
     world_name: &str,
     residence_type: &ResidenceType,
+    town: &str,
 ) -> Result<Response, reqwest_middleware::Error> {
     let mut params = HashMap::new();
     params.insert("subtopic", "houses");
     params.insert("world", world_name);
+    params.insert("town", town);
     let residence_string = match residence_type {
         ResidenceType::House => "houses",
         ResidenceType::Guildhall => "guildhalls",
@@ -96,7 +115,9 @@ async fn fetch_residences_page(
 #[instrument(skip(response))]
 async fn parse_residences_page(
     response: Response,
+    world_name: &str,
     residence_type: &ResidenceType,
+    town: &str,
 ) -> Result<Option<Vec<Residence>>> {
     let text = response.text().await?;
     let document = scraper::Html::parse_document(&text);
@@ -107,6 +128,19 @@ async fn parse_residences_page(
         .next()
         .context("ElementRef for main content not found")?;
 
+    let header_selector = Selector::parse(".Text").expect("Selector to be invalid");
+    let title = main_content
+        .select(&header_selector)
+        .next()
+        .context("ElementRef for title not found")?;
+    let title = title.text().next().context("Could not get title text")?;
+
+    // If this doesn't match, a complex (invalid) town has been passed
+    // and we should 404
+    let re = regex::Regex::new(&format!("(.*) in {town} on {world_name}")).unwrap();
+    if re.find(title).is_none() {
+        return Ok(None);
+    }
     let table_selector =
         Selector::parse(".TableContainer table.TableContent").expect("Selector to be valid");
     let mut tables = main_content.select(&table_selector);
@@ -121,7 +155,22 @@ async fn parse_residences_page(
 
     let mut residences = vec![];
 
+    let house_id_selector = Selector::parse("input[name=\"houseid\"]").expect("Invalid selector");
+
     for row in house_rows {
+        let house_id = row
+            .select(&house_id_selector)
+            .next()
+            .and_then(|e| e.value().attr("value"))
+            .and_then(|s| s.parse::<u32>().ok())
+            .context("Failed to parse house id")?;
+
+        // If it's an invalid town it will be `No <residence_type> found.`
+        let column_count = row.text().count();
+        if column_count == 1 {
+            return Ok(None);
+        }
+
         let (name, size, rent, status) = row
             .text()
             .collect_tuple()
@@ -203,11 +252,13 @@ async fn parse_residences_page(
         };
 
         let residence = Residence {
+            id: house_id,
             residence_type: *residence_type,
             name: name.to_string().sanitize(),
             size,
             rent,
             status,
+            town: town.to_string(),
         };
 
         residences.push(residence)

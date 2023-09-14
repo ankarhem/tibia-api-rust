@@ -19,10 +19,16 @@ use serde::{Deserialize, Serialize};
 use tracing::instrument;
 
 #[derive(Serialize, Deserialize, Debug, utoipa::IntoParams)]
-pub struct WorldParams {
+pub struct PathParams {
     /// Name of world
     #[param(example = "Antica")]
     pub world_name: String,
+}
+
+impl PathParams {
+    pub fn world_name(&self) -> String {
+        self.world_name.capitalize()
+    }
 }
 
 /// World
@@ -31,7 +37,7 @@ pub struct WorldParams {
     get,
     operation_id = "get_world_details",
     path = "/api/v1/worlds/{world_name}",
-    params(WorldParams),
+    params(PathParams),
     responses(
         (status = 200, description = "Success", body = WorldDetails),
         (status = 404, description = "Not Found"),
@@ -44,10 +50,10 @@ pub struct WorldParams {
 #[instrument(name = "Get World", skip(state))]
 pub async fn get(
     State(state): State<AppState>,
-    Path(path_params): Path<WorldParams>,
+    Path(path_params): Path<PathParams>,
 ) -> Result<impl IntoResponse, ServerError> {
     let client = &state.client;
-    let world_name = path_params.world_name.capitalize();
+    let world_name = path_params.world_name();
 
     let response = fetch_world_details_page(client, &world_name)
         .await
