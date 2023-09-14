@@ -1,12 +1,8 @@
-use std::net::{SocketAddr, TcpListener};
-use std::time::Duration;
+use std::net::TcpListener;
 
-use anyhow::{Context, Result};
+use anyhow::Result;
 use axum::{body::Body, http::Request, routing::get, Router};
-use http_cache_reqwest::{CACacheManager, Cache, CacheMode, HttpCache, HttpCacheOptions};
-use once_cell::sync::Lazy;
-use reqwest::{Client, Method};
-use reqwest_middleware::{ClientBuilder, ClientWithMiddleware};
+use reqwest::Method;
 use tower_http::{
     classify::StatusInRangeAsFailures,
     compression::CompressionLayer,
@@ -113,31 +109,4 @@ pub async fn run(listener: TcpListener) -> Result<()> {
         .await?;
 
     Ok(())
-}
-
-// test helpers
-static TRACING: Lazy<()> = Lazy::new(|| {
-    let default_filter_level = "info".to_string();
-    let subscriber_name = "test".to_string();
-
-    if std::env::var("TEST_LOG").is_ok() {
-        let subscriber =
-            telemetry::get_subscriber(subscriber_name, default_filter_level, std::io::stdout);
-        telemetry::init_subscriber(subscriber);
-    } else {
-        let subscriber =
-            telemetry::get_subscriber(subscriber_name, default_filter_level, std::io::sink);
-        telemetry::init_subscriber(subscriber);
-    }
-});
-
-pub fn spawn_app() -> SocketAddr {
-    Lazy::force(&TRACING);
-
-    let listener = TcpListener::bind("127.0.0.1:0").expect("To bind to random port");
-    let addr = listener.local_addr().expect("To get local address");
-
-    tokio::spawn(run(listener));
-
-    addr
 }

@@ -1,6 +1,6 @@
+use super::spawn_app;
 use reqwest::StatusCode;
 use serde_json::Value;
-use tibia_api::*;
 
 #[tokio::test]
 async fn can_get_a_world() {

@@ -1,6 +1,5 @@
+use super::spawn_app;
 use reqwest::StatusCode;
-
-use tibia_api::*;
 
 #[tokio::test]
 async fn healthcheck_works() {

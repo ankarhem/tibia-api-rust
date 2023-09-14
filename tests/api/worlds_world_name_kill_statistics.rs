@@ -1,6 +1,7 @@
+use super::*;
 use reqwest::StatusCode;
 use serde_json::Value;
-use tibia_api::{models::RaceKillStatistics, *};
+use tibia_api::models::RaceKillStatistics;
 
 #[tokio::test]
 async fn can_get_guilds() {
