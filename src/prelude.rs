@@ -2,7 +2,7 @@ use axum::{response::IntoResponse, Json};
 use reqwest::StatusCode;
 use utoipa::{schema, ToSchema};
 
-pub const COMMUNITY_URL: &str = "https://www.tibia.com/community/";
+pub use crate::tibia::TibiaClient;
 
 pub fn error_chain_fmt(
     e: &impl std::error::Error,
@@ -42,7 +42,8 @@ impl std::fmt::Debug for ServerError {
 impl IntoResponse for ServerError {
     fn into_response(self) -> axum::response::Response {
         match self {
-            ServerError::Reqwest(e) => match e.status() {
+            ServerError::Middleware(reqwest_middleware::Error::Reqwest(e))
+            | ServerError::Reqwest(e) => match e.status() {
                 Some(StatusCode::NOT_FOUND) => StatusCode::NOT_FOUND.into_response(),
                 Some(_) => {
                     let body = PublicErrorBody {

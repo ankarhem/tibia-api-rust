@@ -1,9 +1,6 @@
-use std::collections::HashMap;
-
 use crate::prelude::*;
 use anyhow::{Context, Result};
 use axum::{extract::State, Json};
-use reqwest_middleware::ClientWithMiddleware;
 use scraper::Selector;
 use tracing::instrument;
 
@@ -46,7 +43,7 @@ use crate::AppState;
 pub async fn get(State(state): State<AppState>) -> Result<Json<Vec<String>>, ServerError> {
     let client = &state.client;
 
-    let page = fetch_towns_page(client).await.map_err(|e| {
+    let page = client.fetch_towns_page().await.map_err(|e| {
         tracing::error!("Failed to fetch towns page: {:?}", e);
         e
     })?;
@@ -56,17 +53,6 @@ pub async fn get(State(state): State<AppState>) -> Result<Json<Vec<String>>, Ser
     })?;
 
     Ok(Json(towns))
-}
-
-#[instrument(skip(client))]
-async fn fetch_towns_page(
-    client: &ClientWithMiddleware,
-) -> Result<reqwest::Response, reqwest_middleware::Error> {
-    let mut params = HashMap::new();
-    params.insert("subtopic", "houses");
-
-    let response = client.get(COMMUNITY_URL).query(&params).send().await?;
-    Ok(response)
 }
 
 #[instrument(skip(response))]

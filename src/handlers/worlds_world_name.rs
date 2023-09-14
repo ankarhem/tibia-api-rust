@@ -55,7 +55,8 @@ pub async fn get(
     let client = &state.client;
     let world_name = path_params.world_name();
 
-    let response = fetch_world_details_page(client, &world_name)
+    let response = client
+        .fetch_world_details_page(&world_name)
         .await
         .map_err(|e| {
             tracing::error!("Failed to fetch world page: {:?}", e);
@@ -72,19 +73,6 @@ pub async fn get(
         Some(d) => Ok(Json(d).into_response()),
         None => Ok(StatusCode::NOT_FOUND.into_response()),
     }
-}
-
-#[instrument(skip(client))]
-pub async fn fetch_world_details_page(
-    client: &ClientWithMiddleware,
-    world_name: &str,
-) -> Result<Response, reqwest_middleware::Error> {
-    let mut params = HashMap::new();
-    params.insert("subtopic", "worlds");
-    params.insert("world", world_name);
-    let response = client.get(COMMUNITY_URL).query(&params).send().await?;
-
-    Ok(response)
 }
 
 #[instrument(skip(response))]

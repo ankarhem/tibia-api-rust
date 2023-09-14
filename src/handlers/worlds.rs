@@ -1,12 +1,9 @@
-use std::collections::HashMap;
-
 use anyhow::{Context, Result};
 use axum::{extract::State, Json};
 use chrono::{prelude::*, TimeZone, Utc};
 use chrono_tz::Europe::Stockholm;
 use regex::Regex;
 use reqwest::Response;
-use reqwest_middleware::ClientWithMiddleware;
 use scraper::Selector;
 use tracing::instrument;
 
@@ -34,7 +31,7 @@ use crate::{
 pub async fn get(State(state): State<AppState>) -> Result<Json<WorldsResponse>, ServerError> {
     let client = &state.client;
 
-    let response = fetch_worlds_page(client).await.map_err(|e| {
+    let response = client.fetch_worlds_page().await.map_err(|e| {
         tracing::error!("Failed to fetch worlds page: {:?}", e);
         e
     })?;
@@ -44,17 +41,6 @@ pub async fn get(State(state): State<AppState>) -> Result<Json<WorldsResponse>, 
     })?;
 
     Ok(Json(worlds))
-}
-
-#[instrument(skip(client))]
-async fn fetch_worlds_page(
-    client: &ClientWithMiddleware,
-) -> Result<Response, reqwest_middleware::Error> {
-    let mut params = HashMap::new();
-    params.insert("subtopic", "worlds");
-    let response = client.get(COMMUNITY_URL).query(&params).send().await?;
-
-    Ok(response)
 }
 
 #[instrument(skip(response))]

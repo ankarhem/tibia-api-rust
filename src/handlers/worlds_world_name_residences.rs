@@ -80,36 +80,17 @@ pub async fn get(
 
 #[instrument(skip(client))]
 pub async fn get_world_residences(
-    client: &ClientWithMiddleware,
+    client: &TibiaClient,
     world_name: &str,
     residence_type: &ResidenceType,
     town: &str,
 ) -> Result<Option<Vec<Residence>>> {
-    let response = fetch_residences_page(client, world_name, residence_type, town).await?;
+    let response = client
+        .fetch_residences_page(world_name, residence_type, town)
+        .await?;
     let houses = parse_residences_page(response, world_name, residence_type, town).await?;
 
     Ok(houses)
-}
-
-#[instrument(skip(client))]
-async fn fetch_residences_page(
-    client: &ClientWithMiddleware,
-    world_name: &str,
-    residence_type: &ResidenceType,
-    town: &str,
-) -> Result<Response, reqwest_middleware::Error> {
-    let mut params = HashMap::new();
-    params.insert("subtopic", "houses");
-    params.insert("world", world_name);
-    params.insert("town", town);
-    let residence_string = match residence_type {
-        ResidenceType::House => "houses",
-        ResidenceType::Guildhall => "guildhalls",
-    };
-    params.insert("type", residence_string);
-    let response = client.get(COMMUNITY_URL).query(&params).send().await?;
-
-    Ok(response)
 }
 
 #[instrument(skip(response))]

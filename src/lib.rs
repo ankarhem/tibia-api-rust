@@ -27,16 +27,14 @@ use utils::*;
 
 #[derive(Clone)]
 pub struct AppState {
-    client: ClientWithMiddleware,
+    client: tibia::TibiaClient,
 }
 
 fn app() -> Router {
     let openapi_docs = openapi::create_openapi_docs();
 
-    let reqwest_client = create_client().expect("To create reqwest client");
-
     let app_state = AppState {
-        client: reqwest_client,
+        client: tibia::TibiaClient::new(),
     };
 
     let public_service = ServeDir::new("public");
@@ -142,29 +140,4 @@ pub fn spawn_app() -> SocketAddr {
     tokio::spawn(run(listener));
 
     addr
-}
-
-pub fn create_client() -> Result<ClientWithMiddleware> {
-    let reqwest_client = Client::builder()
-        .user_agent(
-            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:109.0) Gecko/20100101 Firefox/113.0",
-        )
-        .brotli(true)
-        .deflate(true)
-        .gzip(true)
-        .pool_idle_timeout(Duration::from_secs(15))
-        .pool_max_idle_per_host(10)
-        .build()
-        .context("Failed to create reqwest client")?;
-
-    let client = ClientBuilder::new(reqwest_client)
-        .with(Cache(HttpCache {
-            // Figure out how to use cache even though tibia sends incorrect cache headers
-            mode: CacheMode::NoStore,
-            manager: CACacheManager::default(),
-            options: HttpCacheOptions::default(),
-        }))
-        .build();
-
-    Ok(client)
 }

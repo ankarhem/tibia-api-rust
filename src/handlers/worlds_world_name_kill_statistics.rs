@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use anyhow::{Context, Result};
 use axum::{
     extract::{Path, State},
@@ -7,7 +5,6 @@ use axum::{
     Json,
 };
 use reqwest::{Response, StatusCode};
-use reqwest_middleware::ClientWithMiddleware;
 use scraper::Selector;
 use tracing::instrument;
 
@@ -42,7 +39,8 @@ pub async fn get(
     let client = &state.client;
     let world_name = path_params.world_name();
 
-    let response = fetch_killstatistics_page(client, &world_name)
+    let response = client
+        .fetch_killstatistics_page(&world_name)
         .await
         .map_err(|e| {
             tracing::error!("Failed to fetch kill statistics page: {:?}", e);
@@ -57,19 +55,6 @@ pub async fn get(
         Some(g) => Ok(Json(g).into_response()),
         None => Ok(StatusCode::NOT_FOUND.into_response()),
     }
-}
-
-#[instrument(skip(client))]
-async fn fetch_killstatistics_page(
-    client: &ClientWithMiddleware,
-    world_name: &str,
-) -> Result<Response, reqwest_middleware::Error> {
-    let mut params = HashMap::new();
-    params.insert("subtopic", "killstatistics");
-    params.insert("world", world_name);
-    let response = client.get(COMMUNITY_URL).query(&params).send().await?;
-
-    Ok(response)
 }
 
 #[instrument(skip(response))]
