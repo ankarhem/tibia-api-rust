@@ -1,5 +1,3 @@
-
-
 use crate::models::{GameWorldType, Location, Player, PvpType, Vocation, WorldDetails};
 use crate::{prelude::*, AppState};
 use anyhow::{anyhow, Context, Result};
