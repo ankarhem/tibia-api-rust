@@ -40,6 +40,12 @@ impl TibiaClient {
     }
 }
 
+impl Default for TibiaClient {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl TibiaClient {
     #[instrument(skip(self))]
     pub async fn fetch_worlds_page(&self) -> Result<reqwest::Response, reqwest_middleware::Error> {

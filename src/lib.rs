@@ -13,24 +13,26 @@ use tower_http::{
 use tower_request_id::{RequestId, RequestIdLayer};
 use tracing::info_span;
 
+pub mod clients;
 mod handlers;
 pub mod models;
 mod prelude;
 pub mod telemetry;
 mod utils;
 
+use clients::TibiaClient;
 use utils::*;
 
 #[derive(Clone)]
 pub struct AppState {
-    client: tibia::TibiaClient,
+    client: TibiaClient,
 }
 
 fn app() -> Router {
     let openapi_docs = openapi::create_openapi_docs();
 
     let app_state = AppState {
-        client: tibia::TibiaClient::new(),
+        client: TibiaClient::new(),
     };
 
     let public_service = ServeDir::new("public");
