@@ -8,6 +8,7 @@ use scraper::Selector;
 use tracing::instrument;
 
 use crate::{
+    clients::HttpSend,
     models::{GameWorldType, TransferType, World, WorldsResponse},
     prelude::*,
     AppState,
@@ -26,7 +27,6 @@ use crate::{
     ),
     tag = "Worlds"
 )]
-#[axum::debug_handler]
 #[instrument(name = "Get Worlds", skip(state))]
 pub async fn get(State(state): State<AppState>) -> Result<Json<WorldsResponse>, ServerError> {
     let client = &state.client;

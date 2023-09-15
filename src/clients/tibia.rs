@@ -9,11 +9,29 @@ use crate::models::ResidenceType;
 const COMMUNITY_URL: &str = "https://www.tibia.com/community/";
 
 #[derive(Debug, Clone)]
-pub struct TibiaClient {
+pub struct TibiaClient<S: HttpSend = Sender> {
     client: ClientWithMiddleware,
+    sender: S,
+}
+pub trait HttpSend {
+    async fn send(
+        &self,
+        request: reqwest_middleware::RequestBuilder,
+    ) -> Result<reqwest::Response, reqwest_middleware::Error>;
 }
 
-impl TibiaClient {
+#[derive(Debug, Clone)]
+pub struct Sender;
+impl HttpSend for Sender {
+    async fn send(
+        &self,
+        request: reqwest_middleware::RequestBuilder,
+    ) -> Result<reqwest::Response, reqwest_middleware::Error> {
+        request.send().await
+    }
+}
+
+impl TibiaClient<Sender> {
     pub fn new() -> Self {
         let reqwest_client = reqwest::Client::builder()
         .user_agent(
@@ -36,22 +54,33 @@ impl TibiaClient {
             }))
             .build();
 
-        Self { client }
+        Self {
+            client,
+            sender: Sender,
+        }
     }
 }
 
-impl Default for TibiaClient {
+impl Default for TibiaClient<Sender> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl TibiaClient {
+impl<S: HttpSend> TibiaClient<S> {
+    pub fn with_sender(sender: S) -> TibiaClient<S> {
+        TibiaClient {
+            client: TibiaClient::new().client,
+            sender,
+        }
+    }
+
     #[instrument(skip(self))]
     pub async fn fetch_worlds_page(&self) -> Result<reqwest::Response, reqwest_middleware::Error> {
         let mut params = HashMap::new();
         params.insert("subtopic", "worlds");
-        let response = self.client.get(COMMUNITY_URL).query(&params).send().await?;
+        let request = self.client.get(COMMUNITY_URL).query(&params);
+        let response = self.sender.send(request).await?;
 
         Ok(response)
     }
@@ -60,7 +89,8 @@ impl TibiaClient {
         let mut params = HashMap::new();
         params.insert("subtopic", "houses");
 
-        let response = self.client.get(COMMUNITY_URL).query(&params).send().await?;
+        let request = self.client.get(COMMUNITY_URL).query(&params);
+        let response = self.sender.send(request).await?;
         Ok(response)
     }
 
@@ -72,7 +102,8 @@ impl TibiaClient {
         let mut params = HashMap::new();
         params.insert("subtopic", "worlds");
         params.insert("world", world_name);
-        let response = self.client.get(COMMUNITY_URL).query(&params).send().await?;
+        let request = self.client.get(COMMUNITY_URL).query(&params);
+        let response = self.sender.send(request).await?;
 
         Ok(response)
     }
@@ -85,7 +116,8 @@ impl TibiaClient {
         let mut params = HashMap::new();
         params.insert("subtopic", "guilds");
         params.insert("world", world_name);
-        let response = self.client.get(COMMUNITY_URL).query(&params).send().await?;
+        let request = self.client.get(COMMUNITY_URL).query(&params);
+        let response = self.sender.send(request).await?;
 
         Ok(response)
     }
@@ -98,7 +130,8 @@ impl TibiaClient {
         let mut params = HashMap::new();
         params.insert("subtopic", "killstatistics");
         params.insert("world", world_name);
-        let response = self.client.get(COMMUNITY_URL).query(&params).send().await?;
+        let request = self.client.get(COMMUNITY_URL).query(&params);
+        let response = self.sender.send(request).await?;
 
         Ok(response)
     }
@@ -119,8 +152,57 @@ impl TibiaClient {
             ResidenceType::Guildhall => "guildhalls",
         };
         params.insert("type", residence_string);
-        let response = self.client.get(COMMUNITY_URL).query(&params).send().await?;
+        let request = self.client.get(COMMUNITY_URL).query(&params);
+        let response = self.sender.send(request).await?;
 
         Ok(response)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{HttpSend, TibiaClient};
+    use http::response;
+
+    #[derive(Default)]
+    pub struct MockSender {
+        status: reqwest::StatusCode,
+        body: &'static str,
+    }
+
+    impl MockSender {
+        pub fn new(status: reqwest::StatusCode, body: &'static str) -> Self {
+            Self { status, body }
+        }
+
+        pub fn status(self, status: reqwest::StatusCode) -> Self {
+            Self { status, ..self }
+        }
+
+        pub fn body(self, body: &'static str) -> Self {
+            Self { body, ..self }
+        }
+    }
+
+    impl TibiaClient<MockSender> {
+        pub fn mocked_client(
+            status: reqwest::StatusCode,
+            body: &'static str,
+        ) -> TibiaClient<MockSender> {
+            TibiaClient::with_sender(MockSender::new(status, body))
+        }
+    }
+
+    impl HttpSend for MockSender {
+        async fn send(
+            &self,
+            _: reqwest_middleware::RequestBuilder,
+        ) -> Result<reqwest::Response, reqwest_middleware::Error> {
+            let response = response::Builder::new()
+                .status(self.status)
+                .body(self.body)
+                .expect("Could not construct mocked response");
+            Ok(response.into())
+        }
     }
 }

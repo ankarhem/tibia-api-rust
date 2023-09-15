@@ -4,7 +4,7 @@ use serde_json::Value;
 
 #[tokio::test]
 async fn can_get_residences() {
-    let addr = spawn_app();
+    let addr = spawn_app(AppState::default());
 
     let response = reqwest::get(format!(
         "http://{addr}/api/v1/worlds/Antica/residences?town=Thais"
@@ -19,7 +19,7 @@ async fn can_get_residences() {
 
 #[tokio::test]
 async fn returns_404_for_invalid_world() {
-    let addr = spawn_app();
+    let addr = spawn_app(AppState::default());
 
     let response = reqwest::get(format!(
         "http://{addr}/api/v1/worlds/invalid_world/residences?town=Thais"
@@ -31,7 +31,7 @@ async fn returns_404_for_invalid_world() {
 
 #[tokio::test]
 async fn returns_404_for_invalid_town() {
-    let addr = spawn_app();
+    let addr = spawn_app(AppState::default());
 
     let response = reqwest::get(format!(
         "http://{addr}/api/v1/worlds/Antica/residences?town=invalid_town"

@@ -5,7 +5,7 @@ use tibia_api::models::RaceKillStatistics;
 
 #[tokio::test]
 async fn can_get_guilds() {
-    let addr = spawn_app();
+    let addr = spawn_app(AppState::default());
 
     let response = reqwest::get(format!(
         "http://{addr}/api/v1/worlds/Antica/kill-statistics"
@@ -37,7 +37,7 @@ async fn can_get_guilds() {
 
 #[tokio::test]
 async fn can_handle_lowercase() {
-    let addr = spawn_app();
+    let addr = spawn_app(AppState::default());
 
     let response = reqwest::get(format!(
         "http://{addr}/api/v1/worlds/antica/kill-statistics"
@@ -58,7 +58,7 @@ async fn can_handle_lowercase() {
 
 #[tokio::test]
 async fn returns_404_for_invalid_world() {
-    let addr = spawn_app();
+    let addr = spawn_app(AppState::default());
 
     let response = reqwest::get(format!(
         "http://{addr}/api/v1/worlds/invalid_world/kill-statistics"

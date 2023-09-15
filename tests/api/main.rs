@@ -1,5 +1,5 @@
 use once_cell::sync::Lazy;
-use tibia_api::{run, telemetry};
+use tibia_api::{app, run, telemetry, AppState};
 
 mod __healthcheck;
 mod towns;
@@ -24,13 +24,14 @@ static TRACING: Lazy<()> = Lazy::new(|| {
     }
 });
 
-pub fn spawn_app() -> std::net::SocketAddr {
+pub fn spawn_app(state: AppState) -> std::net::SocketAddr {
     Lazy::force(&TRACING);
 
     let listener = std::net::TcpListener::bind("127.0.0.1:0").expect("To bind to random port");
     let addr = listener.local_addr().expect("To get local address");
 
-    tokio::spawn(run(listener));
+    let app = app(state);
+    tokio::spawn(run(app, listener));
 
     addr
 }

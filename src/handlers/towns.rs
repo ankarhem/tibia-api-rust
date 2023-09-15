@@ -1,4 +1,4 @@
-use crate::prelude::*;
+use crate::{clients::HttpSend, prelude::*};
 use anyhow::{Context, Result};
 use axum::{extract::State, Json};
 use scraper::Selector;
@@ -38,7 +38,6 @@ use crate::AppState;
     ),
     tag = "Towns"
 )]
-#[axum::debug_handler]
 #[instrument(name = "Get Towns", skip(state))]
 pub async fn get(State(state): State<AppState>) -> Result<Json<Vec<String>>, ServerError> {
     let client = &state.client;

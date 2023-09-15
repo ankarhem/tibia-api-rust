@@ -1,10 +1,10 @@
-use super::spawn_app;
+use super::*;
 use reqwest::StatusCode;
 use serde_json::Value;
 
 #[tokio::test]
 async fn can_get_a_world() {
-    let addr = spawn_app();
+    let addr = spawn_app(AppState::default());
 
     let response = reqwest::get(format!("http://{addr}/api/v1/worlds/Antica"))
         .await
@@ -17,7 +17,7 @@ async fn can_get_a_world() {
 
 #[tokio::test]
 async fn can_handle_lowercase() {
-    let addr = spawn_app();
+    let addr = spawn_app(AppState::default());
 
     let response = reqwest::get(format!("http://{addr}/api/v1/worlds/antica"))
         .await
@@ -30,7 +30,7 @@ async fn can_handle_lowercase() {
 
 #[tokio::test]
 async fn returns_404_for_invalid_world() {
-    let addr = spawn_app();
+    let addr = spawn_app(AppState::default());
 
     let response = reqwest::get(format!("http://{addr}/api/v1/worlds/invalid_world"))
         .await

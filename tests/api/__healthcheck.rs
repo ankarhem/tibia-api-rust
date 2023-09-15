@@ -1,9 +1,9 @@
-use super::spawn_app;
+use super::*;
 use reqwest::StatusCode;
 
 #[tokio::test]
 async fn healthcheck_works() {
-    let addr = spawn_app();
+    let addr = spawn_app(AppState::default());
 
     let response = reqwest::get(format!("http://{addr}/__healthcheck"))
         .await

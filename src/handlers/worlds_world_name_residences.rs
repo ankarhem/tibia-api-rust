@@ -15,6 +15,7 @@ use tracing::instrument;
 
 use super::worlds_world_name::PathParams;
 use crate::{
+    clients::HttpSend,
     models::{Residence, ResidenceStatus, ResidenceType},
     prelude::*,
     AppState,
@@ -77,12 +78,15 @@ pub async fn get(
 }
 
 #[instrument(skip(client))]
-pub async fn get_world_residences(
-    client: &TibiaClient,
+pub async fn get_world_residences<S>(
+    client: &TibiaClient<S>,
     world_name: &str,
     residence_type: &ResidenceType,
     town: &str,
-) -> Result<Option<Vec<Residence>>> {
+) -> Result<Option<Vec<Residence>>>
+where
+    S: HttpSend,
+{
     let response = client
         .fetch_residences_page(world_name, residence_type, town)
         .await?;

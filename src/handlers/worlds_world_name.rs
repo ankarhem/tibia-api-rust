@@ -1,3 +1,4 @@
+use crate::clients::HttpSend;
 use crate::models::{GameWorldType, Location, Player, PvpType, Vocation, WorldDetails};
 use crate::{prelude::*, AppState};
 use anyhow::{anyhow, Context, Result};
@@ -44,7 +45,7 @@ impl PathParams {
     ),
     tag = "Worlds"
 )]
-#[axum::debug_handler]
+// #[axum::debug_handler]
 #[instrument(name = "Get World", skip(state))]
 pub async fn get(
     State(state): State<AppState>,

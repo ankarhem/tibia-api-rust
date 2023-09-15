@@ -1,3 +1,5 @@
+#![feature(async_fn_in_trait)]
+
 use std::net::TcpListener;
 
 use anyhow::Result;
@@ -23,17 +25,13 @@ mod utils;
 use clients::TibiaClient;
 use utils::*;
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct AppState {
     client: TibiaClient,
 }
 
-fn app() -> Router {
+pub fn app(state: AppState) -> Router {
     let openapi_docs = openapi::create_openapi_docs();
-
-    let app_state = AppState {
-        client: TibiaClient::new(),
-    };
 
     let public_service = ServeDir::new("public");
 
@@ -60,7 +58,7 @@ fn app() -> Router {
         .route("/api-docs", get(handlers::redocly::serve_redocly))
         .route("/__healthcheck", get(handlers::__healthcheck::get))
         .fallback_service(public_service)
-        .with_state(app_state)
+        .with_state(state)
         .route("/openapi.json", get(handlers::redocly::serve_openapi))
         .with_state(openapi_docs)
         .layer(CompressionLayer::new())
@@ -96,13 +94,13 @@ fn app() -> Router {
         .layer(RequestIdLayer)
 }
 
-pub async fn run(listener: TcpListener) -> Result<()> {
+pub async fn run(app: Router, listener: TcpListener) -> Result<()> {
     let addr = listener.local_addr()?;
 
     tracing::info!("Listening on {}", addr);
 
     axum::Server::from_tcp(listener)?
-        .serve(app().into_make_service())
+        .serve(app.into_make_service())
         .with_graceful_shutdown(async {
             tokio::signal::ctrl_c()
                 .await

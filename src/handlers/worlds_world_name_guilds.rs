@@ -9,7 +9,7 @@ use scraper::Selector;
 use tracing::instrument;
 
 use super::worlds_world_name::PathParams;
-use crate::{models::Guild, prelude::*, AppState};
+use crate::{clients::HttpSend, models::Guild, prelude::*, AppState};
 
 /// Guilds
 ///

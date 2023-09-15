@@ -10,6 +10,7 @@ use tracing::instrument;
 
 use super::worlds_world_name::PathParams;
 use crate::{
+    clients::HttpSend,
     models::{KillStatistics, KilledAmounts, RaceKillStatistics},
     prelude::*,
     AppState,

@@ -1,10 +1,10 @@
-use super::spawn_app;
+use super::*;
 use reqwest::StatusCode;
 use serde_json::Value;
 
 #[tokio::test]
 async fn can_get_worlds() {
-    let addr = spawn_app();
+    let addr = spawn_app(AppState::default());
 
     let response = reqwest::get(format!("http://{addr}/api/v1/worlds"))
         .await
