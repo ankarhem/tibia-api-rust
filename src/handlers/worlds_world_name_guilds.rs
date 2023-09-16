@@ -28,8 +28,8 @@ use crate::{clients::HttpSend, models::Guild, prelude::*, AppState};
 )]
 #[instrument(skip(state))]
 #[instrument(name = "Get Guilds", skip(state))]
-pub async fn get(
-    State(state): State<AppState>,
+pub async fn get<S: HttpSend>(
+    State(state): State<AppState<S>>,
     Path(path_params): Path<PathParams>,
 ) -> Result<impl IntoResponse, ServerError> {
     let client = &state.client;

@@ -28,7 +28,9 @@ use crate::{
     tag = "Worlds"
 )]
 #[instrument(name = "Get Worlds", skip(state))]
-pub async fn get(State(state): State<AppState>) -> Result<Json<WorldsResponse>, ServerError> {
+pub async fn get<S: HttpSend>(
+    State(state): State<AppState<S>>,
+) -> Result<Json<WorldsResponse>, ServerError> {
     let client = &state.client;
 
     let response = client.fetch_worlds_page().await.map_err(|e| {

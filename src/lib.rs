@@ -1,6 +1,6 @@
 #![feature(async_fn_in_trait)]
 
-use std::net::TcpListener;
+use std::{marker::Send, net::TcpListener};
 
 use anyhow::Result;
 use axum::{body::Body, http::Request, routing::get, Router};
@@ -22,44 +22,59 @@ mod prelude;
 pub mod telemetry;
 mod utils;
 
-use clients::TibiaClient;
+use clients::{HttpSend, Sender, TibiaClient};
 use utils::*;
 
-#[derive(Clone, Default)]
-pub struct AppState {
-    client: TibiaClient,
+#[derive(Clone)]
+pub struct AppState<S: HttpSend> {
+    client: TibiaClient<S>,
 }
 
-pub fn app(state: AppState) -> Router {
+impl Default for AppState<Sender> {
+    fn default() -> Self {
+        Self {
+            client: TibiaClient::default(),
+        }
+    }
+}
+
+impl<S: HttpSend> AppState<S> {
+    pub fn with_client(client: TibiaClient<S>) -> AppState<S> {
+        AppState { client }
+    }
+}
+
+pub fn app<S: HttpSend>(state: AppState<S>) -> Router {
     let openapi_docs = openapi::create_openapi_docs();
 
     let public_service = ServeDir::new("public");
 
-    Router::new()
+    let app = Router::new()
         .route("/api/v1/towns", get(handlers::towns::get))
-        .route("/api/v1/worlds", get(handlers::worlds::get))
-        .route(
-            "/api/v1/worlds/:world_name",
-            get(handlers::worlds_world_name::get),
-        )
-        .route(
-            "/api/v1/worlds/:world_name/guilds",
-            get(handlers::worlds_world_name_guilds::get),
-        )
-        .route(
-            "/api/v1/worlds/:world_name/kill-statistics",
-            get(handlers::worlds_world_name_kill_statistics::get),
-        )
-        .route(
-            "/api/v1/worlds/:world_name/residences",
-            get(handlers::worlds_world_name_residences::get),
-        )
+        // .route("/api/v1/worlds", get(handlers::worlds::get))
+        // .route(
+        //     "/api/v1/worlds/:world_name",
+        //     get(handlers::worlds_world_name::get),
+        // )
+        // .route(
+        //     "/api/v1/worlds/:world_name/guilds",
+        //     get(handlers::worlds_world_name_guilds::get),
+        // )
+        // .route(
+        //     "/api/v1/worlds/:world_name/kill-statistics",
+        //     get(handlers::worlds_world_name_kill_statistics::get),
+        // )
+        // .route(
+        //     "/api/v1/worlds/:world_name/residences",
+        //     get(handlers::worlds_world_name_residences::get),
+        // )
         .route("/", get(handlers::redocly::redirect_redocly))
         .route("/api-docs", get(handlers::redocly::serve_redocly))
         .route("/__healthcheck", get(handlers::__healthcheck::get))
         .fallback_service(public_service)
-        .with_state(state)
-        .route("/openapi.json", get(handlers::redocly::serve_openapi))
+        .with_state(state);
+
+    app.route("/openapi.json", get(handlers::redocly::serve_openapi))
         .with_state(openapi_docs)
         .layer(CompressionLayer::new())
         .layer(

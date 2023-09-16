@@ -39,7 +39,9 @@ use crate::AppState;
     tag = "Towns"
 )]
 #[instrument(name = "Get Towns", skip(state))]
-pub async fn get(State(state): State<AppState>) -> Result<Json<Vec<String>>, ServerError> {
+pub async fn get<S: HttpSend>(
+    State(state): State<AppState<S>>,
+) -> Result<Json<Vec<String>>, ServerError> {
     let client = &state.client;
 
     let page = client.fetch_towns_page().await.map_err(|e| {

@@ -9,11 +9,11 @@ use crate::models::ResidenceType;
 const COMMUNITY_URL: &str = "https://www.tibia.com/community/";
 
 #[derive(Debug, Clone)]
-pub struct TibiaClient<S: HttpSend = Sender> {
+pub struct TibiaClient<S: HttpSend> {
     client: ClientWithMiddleware,
     sender: S,
 }
-pub trait HttpSend {
+pub trait HttpSend: std::marker::Send + Clone + Sync + 'static {
     async fn send(
         &self,
         request: reqwest_middleware::RequestBuilder,
@@ -160,49 +160,4 @@ impl<S: HttpSend> TibiaClient<S> {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::{HttpSend, TibiaClient};
-    use http::response;
-
-    #[derive(Default)]
-    pub struct MockSender {
-        status: reqwest::StatusCode,
-        body: &'static str,
-    }
-
-    impl MockSender {
-        pub fn new(status: reqwest::StatusCode, body: &'static str) -> Self {
-            Self { status, body }
-        }
-
-        pub fn status(self, status: reqwest::StatusCode) -> Self {
-            Self { status, ..self }
-        }
-
-        pub fn body(self, body: &'static str) -> Self {
-            Self { body, ..self }
-        }
-    }
-
-    impl TibiaClient<MockSender> {
-        pub fn mocked_client(
-            status: reqwest::StatusCode,
-            body: &'static str,
-        ) -> TibiaClient<MockSender> {
-            TibiaClient::with_sender(MockSender::new(status, body))
-        }
-    }
-
-    impl HttpSend for MockSender {
-        async fn send(
-            &self,
-            _: reqwest_middleware::RequestBuilder,
-        ) -> Result<reqwest::Response, reqwest_middleware::Error> {
-            let response = response::Builder::new()
-                .status(self.status)
-                .body(self.body)
-                .expect("Could not construct mocked response");
-            Ok(response.into())
-        }
-    }
-}
+pub mod tests {}

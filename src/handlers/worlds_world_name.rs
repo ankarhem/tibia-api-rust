@@ -47,8 +47,8 @@ impl PathParams {
 )]
 // #[axum::debug_handler]
 #[instrument(name = "Get World", skip(state))]
-pub async fn get(
-    State(state): State<AppState>,
+pub async fn get<S: HttpSend>(
+    State(state): State<AppState<S>>,
     Path(path_params): Path<PathParams>,
 ) -> Result<impl IntoResponse, ServerError> {
     let client = &state.client;

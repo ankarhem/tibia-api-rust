@@ -1,10 +1,15 @@
 use super::*;
 use reqwest::StatusCode;
 use serde_json::{json, Value};
+use tibia_api::clients::TibiaClient;
 
 #[tokio::test]
 async fn can_get_towns() {
-    let addr = spawn_app(AppState::default());
+    let mocked_resp = include_str!("../../tests/mocks/towns-200.html");
+    let client = TibiaClient::with_sender(MockSender::new(reqwest::StatusCode::OK, mocked_resp));
+
+    let state = AppState::with_client(client);
+    let addr = spawn_app(state);
 
     let response = reqwest::get(format!("http://{addr}/api/v1/towns"))
         .await

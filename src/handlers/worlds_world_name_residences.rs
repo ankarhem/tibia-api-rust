@@ -52,8 +52,8 @@ impl QueryParams {
 )]
 #[instrument(skip(state))]
 #[instrument(name = "Get Houses", skip(state))]
-pub async fn get(
-    State(state): State<AppState>,
+pub async fn get<S: HttpSend>(
+    State(state): State<AppState<S>>,
     Path(path_params): Path<PathParams>,
     Query(query_params): Query<QueryParams>,
 ) -> Result<impl IntoResponse, ServerError> {
@@ -78,15 +78,12 @@ pub async fn get(
 }
 
 #[instrument(skip(client))]
-pub async fn get_world_residences<S>(
+pub async fn get_world_residences<S: HttpSend>(
     client: &TibiaClient<S>,
     world_name: &str,
     residence_type: &ResidenceType,
     town: &str,
-) -> Result<Option<Vec<Residence>>>
-where
-    S: HttpSend,
-{
+) -> Result<Option<Vec<Residence>>> {
     let response = client
         .fetch_residences_page(world_name, residence_type, town)
         .await?;
