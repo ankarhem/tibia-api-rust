@@ -15,7 +15,6 @@ use tracing::instrument;
 
 use super::worlds_world_name::PathParams;
 use crate::{
-    clients::HttpSend,
     models::{Residence, ResidenceStatus, ResidenceType},
     prelude::*,
     AppState,
@@ -52,8 +51,8 @@ impl QueryParams {
 )]
 #[instrument(skip(state))]
 #[instrument(name = "Get Houses", skip(state))]
-pub async fn get<S: HttpSend>(
-    State(state): State<AppState<S>>,
+pub async fn get(
+    State(state): State<AppState>,
     Path(path_params): Path<PathParams>,
     Query(query_params): Query<QueryParams>,
 ) -> Result<impl IntoResponse, ServerError> {
@@ -78,8 +77,8 @@ pub async fn get<S: HttpSend>(
 }
 
 #[instrument(skip(client))]
-pub async fn get_world_residences<S: HttpSend>(
-    client: &TibiaClient<S>,
+pub async fn get_world_residences(
+    client: &TibiaClient,
     world_name: &str,
     residence_type: &ResidenceType,
     town: &str,

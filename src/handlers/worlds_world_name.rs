@@ -1,4 +1,3 @@
-use crate::clients::HttpSend;
 use crate::models::{GameWorldType, Location, Player, PvpType, Vocation, WorldDetails};
 use crate::{prelude::*, AppState};
 use anyhow::{anyhow, Context, Result};
@@ -47,8 +46,8 @@ impl PathParams {
 )]
 // #[axum::debug_handler]
 #[instrument(name = "Get World", skip(state))]
-pub async fn get<S: HttpSend>(
-    State(state): State<AppState<S>>,
+pub async fn get(
+    State(state): State<AppState>,
     Path(path_params): Path<PathParams>,
 ) -> Result<impl IntoResponse, ServerError> {
     let client = &state.client;

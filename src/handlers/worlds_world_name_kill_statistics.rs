@@ -10,7 +10,6 @@ use tracing::instrument;
 
 use super::worlds_world_name::PathParams;
 use crate::{
-    clients::HttpSend,
     models::{KillStatistics, KilledAmounts, RaceKillStatistics},
     prelude::*,
     AppState,
@@ -33,8 +32,8 @@ use crate::{
 )]
 #[instrument(skip(state))]
 #[instrument(name = "Get Kill Statistics", skip(state))]
-pub async fn get<S: HttpSend>(
-    State(state): State<AppState<S>>,
+pub async fn get(
+    State(state): State<AppState>,
     Path(path_params): Path<PathParams>,
 ) -> Result<impl IntoResponse, ServerError> {
     let client = &state.client;

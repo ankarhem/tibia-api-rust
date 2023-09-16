@@ -2,7 +2,7 @@ use axum::{response::IntoResponse, Json};
 use reqwest::StatusCode;
 use utoipa::{schema, ToSchema};
 
-pub use crate::clients::TibiaClient;
+pub use crate::clients::{Client, TibiaClient};
 
 pub fn error_chain_fmt(
     e: &impl std::error::Error,

@@ -8,7 +8,7 @@ async fn can_get_towns() {
     let mocked_resp = include_str!("../../tests/mocks/towns-200.html");
     let client = TibiaClient::with_sender(MockSender::new(reqwest::StatusCode::OK, mocked_resp));
 
-    let state = AppState::with_client(client);
+    let state = AppState { client };
     let addr = spawn_app(state);
 
     let response = reqwest::get(format!("http://{addr}/api/v1/towns"))

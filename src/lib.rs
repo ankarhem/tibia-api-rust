@@ -4,6 +4,8 @@ use std::{marker::Send, net::TcpListener};
 
 use anyhow::Result;
 use axum::{body::Body, http::Request, routing::get, Router};
+use clients::Client;
+use prelude::TibiaClient;
 use reqwest::Method;
 use tower_http::{
     classify::StatusInRangeAsFailures,
@@ -22,29 +24,14 @@ mod prelude;
 pub mod telemetry;
 mod utils;
 
-use clients::{HttpSend, Sender, TibiaClient};
 use utils::*;
 
-#[derive(Clone)]
-pub struct AppState<S: HttpSend> {
-    client: TibiaClient<S>,
+#[derive(Clone, Default)]
+pub struct AppState<S: Client> {
+    client: S,
 }
 
-impl Default for AppState<Sender> {
-    fn default() -> Self {
-        Self {
-            client: TibiaClient::default(),
-        }
-    }
-}
-
-impl<S: HttpSend> AppState<S> {
-    pub fn with_client(client: TibiaClient<S>) -> AppState<S> {
-        AppState { client }
-    }
-}
-
-pub fn app<S: HttpSend>(state: AppState<S>) -> Router {
+pub fn app<S: Client>(state: AppState<S>) -> Router {
     let openapi_docs = openapi::create_openapi_docs();
 
     let public_service = ServeDir::new("public");
