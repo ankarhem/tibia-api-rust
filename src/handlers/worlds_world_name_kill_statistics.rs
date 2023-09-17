@@ -1,10 +1,9 @@
 use anyhow::{Context, Result};
 use axum::{
     extract::{Path, State},
-    response::IntoResponse,
     Json,
 };
-use reqwest::{Response, StatusCode};
+use reqwest::{Response};
 use scraper::Selector;
 use tracing::instrument;
 

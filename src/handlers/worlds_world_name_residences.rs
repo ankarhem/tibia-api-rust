@@ -1,14 +1,13 @@
 use anyhow::{Context, Result};
 use axum::{
     extract::{Path, Query, State},
-    response::IntoResponse,
     Json,
 };
 use chrono::{Duration, Timelike};
 use futures::future::join_all;
 use itertools::Itertools;
 use regex::Regex;
-use reqwest::{Response, StatusCode};
+use reqwest::{Response};
 
 use scraper::Selector;
 use serde::{Deserialize, Serialize};

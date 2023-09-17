@@ -3,14 +3,13 @@ use crate::{prelude::*, AppState};
 use anyhow::{anyhow, Context, Result};
 use axum::{
     extract::{Path, State},
-    response::IntoResponse,
     Json,
 };
 use capitalize::Capitalize;
 use chrono::{prelude::*, TimeZone, Utc};
 use chrono_tz::Europe::Stockholm;
 use regex::Regex;
-use reqwest::{Response, StatusCode};
+use reqwest::{Response};
 
 use scraper::Selector;
 use serde::{Deserialize, Serialize};
