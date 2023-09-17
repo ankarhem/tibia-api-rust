@@ -1,13 +1,9 @@
-use std::collections::HashMap;
-
 use anyhow::{Context, Result};
 use axum::{
     extract::{Path, State},
-    response::IntoResponse,
     Json,
 };
-use reqwest::{Response, StatusCode};
-use reqwest_middleware::ClientWithMiddleware;
+use reqwest::Response;
 use scraper::Selector;
 use tracing::instrument;
 
@@ -29,16 +25,15 @@ use crate::{models::Guild, prelude::*, AppState};
     ),
     tag = "Worlds"
 )]
-#[instrument(skip(state))]
 #[instrument(name = "Get Guilds", skip(state))]
-pub async fn get(
-    State(state): State<AppState>,
+pub async fn get<S: Client>(
+    State(state): State<AppState<S>>,
     Path(path_params): Path<PathParams>,
-) -> Result<impl IntoResponse, ServerError> {
+) -> Result<Json<Vec<Guild>>, ServerError> {
     let client = &state.client;
     let world_name = path_params.world_name();
 
-    let response = fetch_guilds_page(client, &world_name).await.map_err(|e| {
+    let response = client.fetch_guilds_page(&world_name).await.map_err(|e| {
         tracing::error!("Failed to fetch guilds page: {:?}", e);
         e
     })?;
@@ -47,29 +42,24 @@ pub async fn get(
         e
     })?;
 
-    match guilds {
-        Some(g) => Ok(Json(g).into_response()),
-        None => Ok(StatusCode::NOT_FOUND.into_response()),
-    }
-}
-
-#[instrument(skip(client))]
-async fn fetch_guilds_page(
-    client: &ClientWithMiddleware,
-    world_name: &str,
-) -> Result<Response, reqwest_middleware::Error> {
-    let mut params = HashMap::new();
-    params.insert("subtopic", "guilds");
-    params.insert("world", world_name);
-    let response = client.get(COMMUNITY_URL).query(&params).send().await?;
-
-    Ok(response)
+    Ok(Json(guilds))
 }
 
 #[instrument(skip(response))]
-async fn parse_guilds_page(response: Response) -> Result<Option<Vec<Guild>>> {
+async fn parse_guilds_page(response: Response) -> Result<Vec<Guild>, ServerError> {
     let text = response.text().await?;
     let document = scraper::Html::parse_document(&text);
+
+    let title_selector = Selector::parse("title").expect("Invalid selector for title");
+    let title = document
+        .select(&title_selector)
+        .next()
+        .and_then(|t| t.text().next())
+        .unwrap_or_default();
+
+    if MAINTENANCE_TITLE == title {
+        return Err(TibiaError::Maintenance)?;
+    };
 
     let selector = Selector::parse(".main-content").expect("Selector to be valid");
     let main_content = document
@@ -83,7 +73,7 @@ async fn parse_guilds_page(response: Response) -> Result<Option<Vec<Guild>>> {
 
     // assume 404
     if tables.clone().count() != 2 {
-        return Ok(None);
+        return Err(TibiaError::NotFound)?;
     }
 
     let mut guilds = vec![];
@@ -127,5 +117,5 @@ async fn parse_guilds_page(response: Response) -> Result<Option<Vec<Guild>>> {
         }
     }
 
-    Ok(Some(guilds))
+    Ok(guilds)
 }

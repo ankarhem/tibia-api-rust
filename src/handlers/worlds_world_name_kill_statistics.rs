@@ -1,13 +1,9 @@
-use std::collections::HashMap;
-
 use anyhow::{Context, Result};
 use axum::{
     extract::{Path, State},
-    response::IntoResponse,
     Json,
 };
-use reqwest::{Response, StatusCode};
-use reqwest_middleware::ClientWithMiddleware;
+use reqwest::Response;
 use scraper::Selector;
 use tracing::instrument;
 
@@ -33,16 +29,16 @@ use crate::{
     ),
     tag = "Worlds"
 )]
-#[instrument(skip(state))]
 #[instrument(name = "Get Kill Statistics", skip(state))]
-pub async fn get(
-    State(state): State<AppState>,
+pub async fn get<S: Client>(
+    State(state): State<AppState<S>>,
     Path(path_params): Path<PathParams>,
-) -> Result<impl IntoResponse, ServerError> {
+) -> Result<Json<KillStatistics>, ServerError> {
     let client = &state.client;
     let world_name = path_params.world_name();
 
-    let response = fetch_killstatistics_page(client, &world_name)
+    let response = client
+        .fetch_killstatistics_page(&world_name)
         .await
         .map_err(|e| {
             tracing::error!("Failed to fetch kill statistics page: {:?}", e);
@@ -52,30 +48,24 @@ pub async fn get(
         tracing::error!("Failed to parse kill statistics page: {:?}", e);
         e
     })?;
-
-    match guilds {
-        Some(g) => Ok(Json(g).into_response()),
-        None => Ok(StatusCode::NOT_FOUND.into_response()),
-    }
-}
-
-#[instrument(skip(client))]
-async fn fetch_killstatistics_page(
-    client: &ClientWithMiddleware,
-    world_name: &str,
-) -> Result<Response, reqwest_middleware::Error> {
-    let mut params = HashMap::new();
-    params.insert("subtopic", "killstatistics");
-    params.insert("world", world_name);
-    let response = client.get(COMMUNITY_URL).query(&params).send().await?;
-
-    Ok(response)
+    Ok(Json(guilds))
 }
 
 #[instrument(skip(response))]
-async fn parse_killstatistics_page(response: Response) -> Result<Option<KillStatistics>> {
+async fn parse_killstatistics_page(response: Response) -> Result<KillStatistics, ServerError> {
     let text = response.text().await?;
     let document = scraper::Html::parse_document(&text);
+
+    let title_selector = Selector::parse("title").expect("Invalid selector for title");
+    let title = document
+        .select(&title_selector)
+        .next()
+        .and_then(|t| t.text().next())
+        .unwrap_or_default();
+
+    if MAINTENANCE_TITLE == title {
+        return Err(TibiaError::Maintenance)?;
+    };
 
     let selector = Selector::parse(".main-content").expect("Selector to be valid");
     let main_content = document
@@ -90,7 +80,7 @@ async fn parse_killstatistics_page(response: Response) -> Result<Option<KillStat
 
     // assume 404
     if cells.clone().count() == 0 {
-        return Ok(None);
+        return Err(TibiaError::NotFound)?;
     }
 
     let mut stats: KillStatistics = KillStatistics {
@@ -115,25 +105,33 @@ async fn parse_killstatistics_page(response: Response) -> Result<Option<KillStat
         // handle the last row
         if name == "Total" {
             stats.total_last_day = KilledAmounts {
-                killed_players: kp_day.parse()?,
-                killed_by_players: kbp_day.parse()?,
+                killed_players: kp_day.parse().context("Failed to parse killed_players")?,
+                killed_by_players: kbp_day
+                    .parse()
+                    .context("Failed to parse killed_by_players")?,
             };
 
             stats.total_last_week = KilledAmounts {
-                killed_players: kp_week.parse()?,
-                killed_by_players: kbp_week.parse()?,
+                killed_players: kp_week.parse().context("Failed to parse killed_players")?,
+                killed_by_players: kbp_week
+                    .parse()
+                    .context("Failed to parse killed_by_players")?,
             };
             continue;
         }
 
         let last_day = KilledAmounts {
-            killed_players: kp_day.parse()?,
-            killed_by_players: kbp_day.parse()?,
+            killed_players: kp_day.parse().context("Failed to parse killed_players")?,
+            killed_by_players: kbp_day
+                .parse()
+                .context("Failed to parse killed_by_players")?,
         };
 
         let last_week = KilledAmounts {
-            killed_players: kp_week.parse()?,
-            killed_by_players: kbp_week.parse()?,
+            killed_players: kp_week.parse().context("Failed to parse killed_players")?,
+            killed_by_players: kbp_week
+                .parse()
+                .context("Failed to parse killed_by_players")?,
         };
 
         stats.races.push(RaceKillStatistics {
@@ -143,5 +141,5 @@ async fn parse_killstatistics_page(response: Response) -> Result<Option<KillStat
         })
     }
 
-    Ok(Some(stats))
+    Ok(stats)
 }

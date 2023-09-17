@@ -1,16 +1,14 @@
-use std::collections::HashMap;
-
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Result};
 use axum::{
     extract::{Path, Query, State},
-    response::IntoResponse,
     Json,
 };
 use chrono::{Duration, Timelike};
+use futures::future::join_all;
 use itertools::Itertools;
 use regex::Regex;
-use reqwest::{Response, StatusCode};
-use reqwest_middleware::ClientWithMiddleware;
+use reqwest::Response;
+
 use scraper::Selector;
 use serde::{Deserialize, Serialize};
 use tracing::instrument;
@@ -28,11 +26,18 @@ pub struct QueryParams {
     /// The town for which to fetch residences
     #[param(example = "Thais")]
     town: String,
+    /// Filter residences by type
+    #[serde(rename = "type")]
+    residence_type: Option<ResidenceType>,
 }
 
 impl QueryParams {
     pub fn town(&self) -> String {
         self.town.to_string()
+    }
+
+    pub fn residence_type(&self) -> Option<ResidenceType> {
+        self.residence_type
     }
 }
 
@@ -51,65 +56,46 @@ impl QueryParams {
     ),
     tag = "Worlds"
 )]
-#[instrument(skip(state))]
-#[instrument(name = "Get Houses", skip(state))]
-pub async fn get(
-    State(state): State<AppState>,
+#[instrument(name = "Get Residences", skip(state))]
+pub async fn get<S: Client>(
+    State(state): State<AppState<S>>,
     Path(path_params): Path<PathParams>,
     Query(query_params): Query<QueryParams>,
-) -> Result<impl IntoResponse, ServerError> {
+) -> Result<Json<Vec<Residence>>, ServerError> {
     let client = &state.client;
     let world_name = path_params.world_name();
     let town = query_params.town();
+    let residence_types = query_params
+        .residence_type()
+        .map(|t| vec![t])
+        .unwrap_or(vec![ResidenceType::House, ResidenceType::Guildhall]);
 
-    let houses = get_world_residences(client, &world_name, &ResidenceType::House, &town);
-    let guildhalls = get_world_residences(client, &world_name, &ResidenceType::Guildhall, &town);
+    let futures = residence_types
+        .iter()
+        .map(|residence_type| get_world_residences(client, &world_name, residence_type, &town));
 
-    match futures::join!(houses, guildhalls) {
-        (Ok(Some(mut houses)), Ok(Some(guildhalls))) => {
-            houses.extend(guildhalls);
-            Ok(Json(houses).into_response())
-        }
-        (Ok(None), _) | (_, Ok(None)) => Ok(StatusCode::NOT_FOUND.into_response()),
-        (_, Err(e)) | (Err(e), _) => {
-            tracing::error!("Failed to fetch residences: {:?}", e);
-            Err(e.into())
-        }
-    }
+    let residences = join_all(futures)
+        .await
+        .into_iter()
+        .collect::<Result<Vec<Vec<Residence>>, ServerError>>()?;
+
+    let residences = residences.into_iter().flatten().collect_vec();
+    Ok(Json(residences))
 }
 
 #[instrument(skip(client))]
-pub async fn get_world_residences(
-    client: &ClientWithMiddleware,
+pub async fn get_world_residences<S: Client>(
+    client: &S,
     world_name: &str,
     residence_type: &ResidenceType,
     town: &str,
-) -> Result<Option<Vec<Residence>>> {
-    let response = fetch_residences_page(client, world_name, residence_type, town).await?;
+) -> Result<Vec<Residence>, ServerError> {
+    let response = client
+        .fetch_residences_page(world_name, residence_type, town)
+        .await?;
     let houses = parse_residences_page(response, world_name, residence_type, town).await?;
 
     Ok(houses)
-}
-
-#[instrument(skip(client))]
-async fn fetch_residences_page(
-    client: &ClientWithMiddleware,
-    world_name: &str,
-    residence_type: &ResidenceType,
-    town: &str,
-) -> Result<Response, reqwest_middleware::Error> {
-    let mut params = HashMap::new();
-    params.insert("subtopic", "houses");
-    params.insert("world", world_name);
-    params.insert("town", town);
-    let residence_string = match residence_type {
-        ResidenceType::House => "houses",
-        ResidenceType::Guildhall => "guildhalls",
-    };
-    params.insert("type", residence_string);
-    let response = client.get(COMMUNITY_URL).query(&params).send().await?;
-
-    Ok(response)
 }
 
 #[instrument(skip(response))]
@@ -118,9 +104,20 @@ async fn parse_residences_page(
     world_name: &str,
     residence_type: &ResidenceType,
     town: &str,
-) -> Result<Option<Vec<Residence>>> {
+) -> Result<Vec<Residence>, ServerError> {
     let text = response.text().await?;
     let document = scraper::Html::parse_document(&text);
+
+    let title_selector = Selector::parse("title").expect("Invalid selector for title");
+    let title = document
+        .select(&title_selector)
+        .next()
+        .and_then(|t| t.text().next())
+        .unwrap_or_default();
+
+    if MAINTENANCE_TITLE == title {
+        return Err(TibiaError::Maintenance)?;
+    };
 
     let selector = Selector::parse(".main-content").expect("Selector to be valid");
     let main_content = document
@@ -139,7 +136,7 @@ async fn parse_residences_page(
     // and we should 404
     let re = regex::Regex::new(&format!("(.*) in {town} on {world_name}")).unwrap();
     if re.find(title).is_none() {
-        return Ok(None);
+        return Err(TibiaError::NotFound)?;
     }
     let table_selector =
         Selector::parse(".TableContainer table.TableContent").expect("Selector to be valid");
@@ -147,7 +144,7 @@ async fn parse_residences_page(
 
     // assume 404
     if tables.clone().count() != 3 {
-        return Ok(None);
+        return Err(TibiaError::NotFound)?;
     }
 
     let row_selector = Selector::parse("tr").expect("Selector to be valid");
@@ -168,7 +165,7 @@ async fn parse_residences_page(
         // If it's an invalid town it will be `No <residence_type> found.`
         let column_count = row.text().count();
         if column_count == 1 {
-            return Ok(None);
+            return Err(TibiaError::NotFound)?;
         }
 
         let (name, size, rent, status) = row
@@ -193,7 +190,7 @@ async fn parse_residences_page(
         let value = status.to_string().sanitize();
         let status = match value.as_str() {
             "rented" => ResidenceStatus::Rented,
-            "auction (no bid yet)" => ResidenceStatus::AuctionNoBid,
+            "auctioned (no bid yet)" => ResidenceStatus::AuctionNoBid,
             _ => {
                 let gold_re = Regex::new(r"(\d+) gold").expect("Invalid residence gold regex");
                 let gold_str = gold_re
@@ -214,38 +211,47 @@ async fn parse_residences_page(
                         .captures(&value)
                         .context(format!("Time not found: `{}`", value))?;
 
-                    let time = time_matches
+                    let time: i64 = time_matches
                         .get(1)
                         .map(|t| t.as_str())
-                        .and_then(|t| t.parse().ok());
-                    let time_unit = time_matches.get(2).map(|u| u.as_str());
+                        .and_then(|t| t.parse().ok())
+                        .context("Could not parse time")?;
+                    let time_unit = time_matches
+                        .get(2)
+                        .map(|u| u.as_str())
+                        .context("Could not parse time unit")?;
 
-                    // current date time without minutes / seconds
                     let current_dt = chrono::Utc::now()
                         .with_minute(0)
                         .and_then(|d| d.with_second(0))
                         .and_then(|d| d.with_nanosecond(0))
                         .context("Failed to construct current time")?;
 
-                    match (time, time_unit) {
-                        (Some(time), Some(unit)) => {
-                            let duration = match unit {
-                                "day" | "days" => Duration::days(time),
-                                "hour" | "hours" => Duration::hours(time),
-                                // Because of the regex this cannot happen
-                                _ => panic!("Invalid time unit"),
-                            };
-
-                            let expires_dt =
-                                current_dt.checked_add_signed(duration).context(format!(
-                                    "Failed to calculate expiry time `{time}` with unit `{unit}`"
-                                ))?;
-                            ResidenceStatus::AuctionWithBid {
-                                bid: gold,
-                                expiry_time: expires_dt,
-                            }
+                    let current_hour = current_dt.hour();
+                    // if unit is days, set hour to 8 (utc server save)
+                    // otherwise we need to add an hour (0h30min left => set min 0 and add hour)
+                    let current_dt = match time_unit {
+                        "day" | "days" => {
+                            current_dt.with_hour(8).context("Failed to set hour to 8")?
                         }
-                        _ => return Err(anyhow!(format!("Time and unit not found: `{}`", value))),
+                        _ => current_dt
+                            .with_hour(current_hour + 1)
+                            .context("Failed to add hour")?,
+                    };
+
+                    let duration = match time_unit {
+                        "day" | "days" => Duration::days(time),
+                        "hour" | "hours" => Duration::hours(time),
+                        // Because of the regex this cannot happen
+                        _ => panic!("Invalid time unit"),
+                    };
+
+                    let expires_dt = current_dt.checked_add_signed(duration).context(format!(
+                        "Failed to calculate expiry time `{time}` with unit `{time_unit}`"
+                    ))?;
+                    ResidenceStatus::AuctionWithBid {
+                        bid: gold,
+                        expiry_time: expires_dt,
                     }
                 }
             }
@@ -264,5 +270,5 @@ async fn parse_residences_page(
         residences.push(residence)
     }
 
-    Ok(Some(residences))
+    Ok(residences)
 }

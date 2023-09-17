@@ -1,10 +1,10 @@
+use super::*;
+use pretty_assertions::assert_eq;
 use reqwest::StatusCode;
-
-use tibia_api::*;
 
 #[tokio::test]
 async fn healthcheck_works() {
-    let addr = spawn_app();
+    let addr = spawn_app(AppState::default());
 
     let response = reqwest::get(format!("http://{addr}/__healthcheck"))
         .await

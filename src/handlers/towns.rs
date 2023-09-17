@@ -1,9 +1,6 @@
-use std::collections::HashMap;
-
 use crate::prelude::*;
 use anyhow::{Context, Result};
 use axum::{extract::State, Json};
-use reqwest_middleware::ClientWithMiddleware;
 use scraper::Selector;
 use tracing::instrument;
 
@@ -41,15 +38,17 @@ use crate::AppState;
     ),
     tag = "Towns"
 )]
-#[axum::debug_handler]
 #[instrument(name = "Get Towns", skip(state))]
-pub async fn get(State(state): State<AppState>) -> Result<Json<Vec<String>>, ServerError> {
+pub async fn get<S: Client>(
+    State(state): State<AppState<S>>,
+) -> Result<Json<Vec<String>>, ServerError> {
     let client = &state.client;
 
-    let page = fetch_towns_page(client).await.map_err(|e| {
+    let page = client.fetch_towns_page().await.map_err(|e| {
         tracing::error!("Failed to fetch towns page: {:?}", e);
         e
     })?;
+
     let towns = parse_towns_page(page).await.map_err(|e| {
         tracing::error!("Failed to parse towns page: {:?}", e);
         e
@@ -58,21 +57,21 @@ pub async fn get(State(state): State<AppState>) -> Result<Json<Vec<String>>, Ser
     Ok(Json(towns))
 }
 
-#[instrument(skip(client))]
-async fn fetch_towns_page(
-    client: &ClientWithMiddleware,
-) -> Result<reqwest::Response, reqwest_middleware::Error> {
-    let mut params = HashMap::new();
-    params.insert("subtopic", "houses");
-
-    let response = client.get(COMMUNITY_URL).query(&params).send().await?;
-    Ok(response)
-}
-
-#[instrument(skip(response))]
-async fn parse_towns_page(response: reqwest::Response) -> Result<Vec<String>> {
-    let text = response.text().await?;
+#[instrument(skip(page))]
+async fn parse_towns_page(page: reqwest::Response) -> Result<Vec<String>, ServerError> {
+    let text = page.text().await?;
     let document = scraper::Html::parse_document(&text);
+
+    let title_selector = Selector::parse("title").expect("Invalid selector for title");
+    let title = document
+        .select(&title_selector)
+        .next()
+        .and_then(|t| t.text().next())
+        .unwrap_or_default();
+
+    if MAINTENANCE_TITLE == title {
+        return Err(TibiaError::Maintenance)?;
+    };
 
     let selector = Selector::parse(".main-content").expect("Invalid selector for main content");
     let main_content = &document

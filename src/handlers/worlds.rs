@@ -1,12 +1,9 @@
-use std::collections::HashMap;
-
 use anyhow::{Context, Result};
 use axum::{extract::State, Json};
 use chrono::{prelude::*, TimeZone, Utc};
 use chrono_tz::Europe::Stockholm;
 use regex::Regex;
 use reqwest::Response;
-use reqwest_middleware::ClientWithMiddleware;
 use scraper::Selector;
 use tracing::instrument;
 
@@ -29,12 +26,13 @@ use crate::{
     ),
     tag = "Worlds"
 )]
-#[axum::debug_handler]
 #[instrument(name = "Get Worlds", skip(state))]
-pub async fn get(State(state): State<AppState>) -> Result<Json<WorldsResponse>, ServerError> {
+pub async fn get<S: Client>(
+    State(state): State<AppState<S>>,
+) -> Result<Json<WorldsResponse>, ServerError> {
     let client = &state.client;
 
-    let response = fetch_worlds_page(client).await.map_err(|e| {
+    let response = client.fetch_worlds_page().await.map_err(|e| {
         tracing::error!("Failed to fetch worlds page: {:?}", e);
         e
     })?;
@@ -46,21 +44,23 @@ pub async fn get(State(state): State<AppState>) -> Result<Json<WorldsResponse>, 
     Ok(Json(worlds))
 }
 
-#[instrument(skip(client))]
-async fn fetch_worlds_page(
-    client: &ClientWithMiddleware,
-) -> Result<Response, reqwest_middleware::Error> {
-    let mut params = HashMap::new();
-    params.insert("subtopic", "worlds");
-    let response = client.get(COMMUNITY_URL).query(&params).send().await?;
-
-    Ok(response)
-}
-
 #[instrument(skip(response))]
-async fn parse_worlds_page(response: Response) -> Result<WorldsResponse> {
+async fn parse_worlds_page(response: Response) -> Result<WorldsResponse, ServerError> {
     let text = response.text().await?;
     let document = scraper::Html::parse_document(&text);
+
+    let title_selector = Selector::parse("title").expect("Invalid selector for title");
+    let title = document
+        .select(&title_selector)
+        .next()
+        .and_then(|t| t.text().next())
+        .unwrap_or_default();
+
+    println!("title: {}", title);
+
+    if MAINTENANCE_TITLE == title {
+        return Err(TibiaError::Maintenance)?;
+    };
 
     let selector = Selector::parse(".main-content").expect("Invalid selector for main content");
     let main_content = &document

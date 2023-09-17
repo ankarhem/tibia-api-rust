@@ -1,19 +1,16 @@
-use std::collections::HashMap;
-
 use crate::models::{GameWorldType, Location, Player, PvpType, Vocation, WorldDetails};
 use crate::{prelude::*, AppState};
 use anyhow::{anyhow, Context, Result};
 use axum::{
     extract::{Path, State},
-    response::IntoResponse,
     Json,
 };
 use capitalize::Capitalize;
 use chrono::{prelude::*, TimeZone, Utc};
 use chrono_tz::Europe::Stockholm;
 use regex::Regex;
-use reqwest::{Response, StatusCode};
-use reqwest_middleware::ClientWithMiddleware;
+use reqwest::Response;
+
 use scraper::Selector;
 use serde::{Deserialize, Serialize};
 use tracing::instrument;
@@ -46,16 +43,16 @@ impl PathParams {
     ),
     tag = "Worlds"
 )]
-#[axum::debug_handler]
 #[instrument(name = "Get World", skip(state))]
-pub async fn get(
-    State(state): State<AppState>,
+pub async fn get<S: Client>(
+    State(state): State<AppState<S>>,
     Path(path_params): Path<PathParams>,
-) -> Result<impl IntoResponse, ServerError> {
+) -> Result<Json<WorldDetails>, ServerError> {
     let client = &state.client;
     let world_name = path_params.world_name();
 
-    let response = fetch_world_details_page(client, &world_name)
+    let response = client
+        .fetch_world_details_page(&world_name)
         .await
         .map_err(|e| {
             tracing::error!("Failed to fetch world page: {:?}", e);
@@ -68,32 +65,27 @@ pub async fn get(
             e
         })?;
 
-    match world_details {
-        Some(d) => Ok(Json(d).into_response()),
-        None => Ok(StatusCode::NOT_FOUND.into_response()),
-    }
-}
-
-#[instrument(skip(client))]
-pub async fn fetch_world_details_page(
-    client: &ClientWithMiddleware,
-    world_name: &str,
-) -> Result<Response, reqwest_middleware::Error> {
-    let mut params = HashMap::new();
-    params.insert("subtopic", "worlds");
-    params.insert("world", world_name);
-    let response = client.get(COMMUNITY_URL).query(&params).send().await?;
-
-    Ok(response)
+    Ok(Json(world_details))
 }
 
 #[instrument(skip(response))]
 pub async fn parse_world_details_page(
     response: Response,
     world_name: &str,
-) -> Result<Option<WorldDetails>> {
+) -> Result<WorldDetails, ServerError> {
     let text = response.text().await?;
     let document = scraper::Html::parse_document(&text);
+
+    let title_selector = Selector::parse("title").expect("Invalid selector for title");
+    let title = document
+        .select(&title_selector)
+        .next()
+        .and_then(|t| t.text().next())
+        .unwrap_or_default();
+
+    if MAINTENANCE_TITLE == title {
+        return Err(TibiaError::Maintenance)?;
+    };
 
     let selector = Selector::parse(".main-content").expect("Invalid selector for main content");
     let main_content = &document
@@ -108,7 +100,7 @@ pub async fn parse_world_details_page(
     // is a 404 page
     if tables.clone().count() == 1 {
         tracing::info!("World '{}' not found", world_name);
-        return Ok(None);
+        return Err(TibiaError::NotFound)?;
     }
 
     // skip first table
@@ -247,7 +239,7 @@ pub async fn parse_world_details_page(
                 return Err(anyhow!(format!(
                     "Unexpected header {:?}",
                     header.inner_html()
-                )))
+                )))?
             }
         }
     }
@@ -274,14 +266,16 @@ pub async fn parse_world_details_page(
                 .next()
                 .context("Player name not found")?
                 .to_string();
+
+            let level_html = level.inner_html();
             let player = Player {
                 name: player_name,
-                level: level.inner_html().parse()?,
+                level: level_html.parse().context("Failed to parse player level")?,
                 vocation,
             };
             world_details.players_online.push(player);
         }
     }
 
-    Ok(Some(world_details))
+    Ok(world_details)
 }

@@ -1,6 +1,6 @@
 use anyhow::Result;
 use std::net::TcpListener;
-use tibia_api::telemetry;
+use tibia_api::{telemetry, AppState};
 use tracing_appender::rolling;
 use tracing_subscriber::fmt::writer::MakeWriterExt;
 
@@ -15,7 +15,9 @@ async fn main() -> Result<()> {
     let port = std::env::var("PORT").unwrap_or("3000".to_string());
 
     let listener = TcpListener::bind(format!("0.0.0.0:{port}"))?;
-    tibia_api::run(listener).await?;
+
+    let app = tibia_api::app(AppState::default());
+    tibia_api::run(app, listener).await?;
 
     Ok(())
 }

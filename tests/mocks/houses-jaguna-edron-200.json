@@ -1,0 +1,1435 @@
+[
+  {
+    "id": 50101,
+    "town": "Edron",
+    "type": "house",
+    "name": "Castle Shop 1",
+    "size": 42,
+    "rent": 400000,
+    "status": {
+      "type": "rented"
+    }
+  },
+  {
+    "id": 50102,
+    "town": "Edron",
+    "type": "house",
+    "name": "Castle Shop 2",
+    "size": 42,
+    "rent": 400000,
+    "status": {
+      "type": "auctionWithBid",
+      "bid": 1555555,
+      "expiryTime": "2023-09-18T07:00:00Z"
+    }
+  },
+  {
+    "id": 50103,
+    "town": "Edron",
+    "type": "house",
+    "name": "Castle Shop 3",
+    "size": 42,
+    "rent": 300000,
+    "status": {
+      "type": "rented"
+    }
+  },
+  {
+    "id": 50201,
+    "town": "Edron",
+    "type": "house",
+    "name": "Castle Street 1",
+    "size": 60,
+    "rent": 300000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 50202,
+    "town": "Edron",
+    "type": "house",
+    "name": "Castle Street 2",
+    "size": 31,
+    "rent": 150000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 50203,
+    "town": "Edron",
+    "type": "house",
+    "name": "Castle Street 3",
+    "size": 37,
+    "rent": 150000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 50204,
+    "town": "Edron",
+    "type": "house",
+    "name": "Castle Street 4",
+    "size": 37,
+    "rent": 150000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 50205,
+    "town": "Edron",
+    "type": "house",
+    "name": "Castle Street 5",
+    "size": 37,
+    "rent": 150000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 50104,
+    "town": "Edron",
+    "type": "house",
+    "name": "Castle, 3rd Floor, Flat 01",
+    "size": 13,
+    "rent": 50000,
+    "status": {
+      "type": "rented"
+    }
+  },
+  {
+    "id": 50105,
+    "town": "Edron",
+    "type": "house",
+    "name": "Castle, 3rd Floor, Flat 02",
+    "size": 17,
+    "rent": 80000,
+    "status": {
+      "type": "rented"
+    }
+  },
+  {
+    "id": 50106,
+    "town": "Edron",
+    "type": "house",
+    "name": "Castle, 3rd Floor, Flat 03",
+    "size": 13,
+    "rent": 50000,
+    "status": {
+      "type": "rented"
+    }
+  },
+  {
+    "id": 50107,
+    "town": "Edron",
+    "type": "house",
+    "name": "Castle, 3rd Floor, Flat 04",
+    "size": 13,
+    "rent": 25000,
+    "status": {
+      "type": "rented"
+    }
+  },
+  {
+    "id": 50108,
+    "town": "Edron",
+    "type": "house",
+    "name": "Castle, 3rd Floor, Flat 05",
+    "size": 17,
+    "rent": 80000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 50109,
+    "town": "Edron",
+    "type": "house",
+    "name": "Castle, 3rd Floor, Flat 06",
+    "size": 21,
+    "rent": 100000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 50110,
+    "town": "Edron",
+    "type": "house",
+    "name": "Castle, 3rd Floor, Flat 07",
+    "size": 16,
+    "rent": 80000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 50111,
+    "town": "Edron",
+    "type": "house",
+    "name": "Castle, 4th Floor, Flat 01",
+    "size": 13,
+    "rent": 50000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 50112,
+    "town": "Edron",
+    "type": "house",
+    "name": "Castle, 4th Floor, Flat 02",
+    "size": 17,
+    "rent": 80000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 50113,
+    "town": "Edron",
+    "type": "house",
+    "name": "Castle, 4th Floor, Flat 03",
+    "size": 13,
+    "rent": 50000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 50114,
+    "town": "Edron",
+    "type": "house",
+    "name": "Castle, 4th Floor, Flat 04",
+    "size": 13,
+    "rent": 50000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 50115,
+    "town": "Edron",
+    "type": "house",
+    "name": "Castle, 4th Floor, Flat 05",
+    "size": 17,
+    "rent": 80000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 50116,
+    "town": "Edron",
+    "type": "house",
+    "name": "Castle, 4th Floor, Flat 06",
+    "size": 21,
+    "rent": 100000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 50117,
+    "town": "Edron",
+    "type": "house",
+    "name": "Castle, 4th Floor, Flat 07",
+    "size": 16,
+    "rent": 80000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 50118,
+    "town": "Edron",
+    "type": "house",
+    "name": "Castle, 4th Floor, Flat 08",
+    "size": 21,
+    "rent": 80000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 50119,
+    "town": "Edron",
+    "type": "house",
+    "name": "Castle, 4th Floor, Flat 09",
+    "size": 16,
+    "rent": 50000,
+    "status": {
+      "type": "rented"
+    }
+  },
+  {
+    "id": 50120,
+    "town": "Edron",
+    "type": "house",
+    "name": "Castle, Basement, Flat 01",
+    "size": 13,
+    "rent": 50000,
+    "status": {
+      "type": "auctionWithBid",
+      "bid": 0,
+      "expiryTime": "2023-09-21T11:00:00Z"
+    }
+  },
+  {
+    "id": 50121,
+    "town": "Edron",
+    "type": "house",
+    "name": "Castle, Basement, Flat 02",
+    "size": 13,
+    "rent": 50000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 50122,
+    "town": "Edron",
+    "type": "house",
+    "name": "Castle, Basement, Flat 03",
+    "size": 13,
+    "rent": 50000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 50123,
+    "town": "Edron",
+    "type": "house",
+    "name": "Castle, Basement, Flat 04",
+    "size": 13,
+    "rent": 50000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 50124,
+    "town": "Edron",
+    "type": "house",
+    "name": "Castle, Basement, Flat 05",
+    "size": 13,
+    "rent": 50000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 50125,
+    "town": "Edron",
+    "type": "house",
+    "name": "Castle, Basement, Flat 06",
+    "size": 13,
+    "rent": 50000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 50126,
+    "town": "Edron",
+    "type": "house",
+    "name": "Castle, Basement, Flat 07",
+    "size": 13,
+    "rent": 50000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 50127,
+    "town": "Edron",
+    "type": "house",
+    "name": "Castle, Basement, Flat 08",
+    "size": 13,
+    "rent": 50000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 50128,
+    "town": "Edron",
+    "type": "house",
+    "name": "Castle, Basement, Flat 09",
+    "size": 13,
+    "rent": 25000,
+    "status": {
+      "type": "rented"
+    }
+  },
+  {
+    "id": 50129,
+    "town": "Edron",
+    "type": "house",
+    "name": "Castle, Residence",
+    "size": 104,
+    "rent": 600000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 50401,
+    "town": "Edron",
+    "type": "house",
+    "name": "Central Circle 1",
+    "size": 73,
+    "rent": 800000,
+    "status": {
+      "type": "rented"
+    }
+  },
+  {
+    "id": 50402,
+    "town": "Edron",
+    "type": "house",
+    "name": "Central Circle 2",
+    "size": 80,
+    "rent": 800000,
+    "status": {
+      "type": "rented"
+    }
+  },
+  {
+    "id": 50403,
+    "town": "Edron",
+    "type": "house",
+    "name": "Central Circle 3",
+    "size": 94,
+    "rent": 800000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 50404,
+    "town": "Edron",
+    "type": "house",
+    "name": "Central Circle 4",
+    "size": 94,
+    "rent": 800000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 50405,
+    "town": "Edron",
+    "type": "house",
+    "name": "Central Circle 5",
+    "size": 94,
+    "rent": 800000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 50406,
+    "town": "Edron",
+    "type": "house",
+    "name": "Central Circle 6 (Shop)",
+    "size": 97,
+    "rent": 400000,
+    "status": {
+      "type": "auctionWithBid",
+      "bid": 0,
+      "expiryTime": "2023-09-22T11:00:00Z"
+    }
+  },
+  {
+    "id": 50407,
+    "town": "Edron",
+    "type": "house",
+    "name": "Central Circle 7 (Shop)",
+    "size": 97,
+    "rent": 400000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 50408,
+    "town": "Edron",
+    "type": "house",
+    "name": "Central Circle 8 (Shop)",
+    "size": 97,
+    "rent": 400000,
+    "status": {
+      "type": "auctionWithBid",
+      "bid": 0,
+      "expiryTime": "2023-09-18T07:00:00Z"
+    }
+  },
+  {
+    "id": 50409,
+    "town": "Edron",
+    "type": "house",
+    "name": "Central Circle 9a",
+    "size": 21,
+    "rent": 150000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 50410,
+    "town": "Edron",
+    "type": "house",
+    "name": "Central Circle 9b",
+    "size": 21,
+    "rent": 150000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 54013,
+    "town": "Edron",
+    "type": "house",
+    "name": "Cormaya 1",
+    "size": 26,
+    "rent": 150000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 54025,
+    "town": "Edron",
+    "type": "house",
+    "name": "Cormaya 10",
+    "size": 80,
+    "rent": 300000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 54026,
+    "town": "Edron",
+    "type": "house",
+    "name": "Cormaya 11",
+    "size": 43,
+    "rent": 150000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 54014,
+    "town": "Edron",
+    "type": "house",
+    "name": "Cormaya 2",
+    "size": 78,
+    "rent": 300000,
+    "status": {
+      "type": "rented"
+    }
+  },
+  {
+    "id": 54015,
+    "town": "Edron",
+    "type": "house",
+    "name": "Cormaya 3",
+    "size": 43,
+    "rent": 200000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 54016,
+    "town": "Edron",
+    "type": "house",
+    "name": "Cormaya 4",
+    "size": 36,
+    "rent": 150000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 54017,
+    "town": "Edron",
+    "type": "house",
+    "name": "Cormaya 5",
+    "size": 115,
+    "rent": 300000,
+    "status": {
+      "type": "auctionWithBid",
+      "bid": 100001,
+      "expiryTime": "2023-09-19T11:00:00Z"
+    }
+  },
+  {
+    "id": 54018,
+    "town": "Edron",
+    "type": "house",
+    "name": "Cormaya 6",
+    "size": 51,
+    "rent": 200000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 54019,
+    "town": "Edron",
+    "type": "house",
+    "name": "Cormaya 7",
+    "size": 51,
+    "rent": 200000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 54020,
+    "town": "Edron",
+    "type": "house",
+    "name": "Cormaya 8",
+    "size": 58,
+    "rent": 200000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 54021,
+    "town": "Edron",
+    "type": "house",
+    "name": "Cormaya 9a",
+    "size": 25,
+    "rent": 80000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 54022,
+    "town": "Edron",
+    "type": "house",
+    "name": "Cormaya 9b",
+    "size": 56,
+    "rent": 150000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 54023,
+    "town": "Edron",
+    "type": "house",
+    "name": "Cormaya 9c",
+    "size": 25,
+    "rent": 80000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 54024,
+    "town": "Edron",
+    "type": "house",
+    "name": "Cormaya 9d",
+    "size": 56,
+    "rent": 150000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 54001,
+    "town": "Edron",
+    "type": "house",
+    "name": "Cormaya Flats, Flat 01",
+    "size": 10,
+    "rent": 25000,
+    "status": {
+      "type": "rented"
+    }
+  },
+  {
+    "id": 54002,
+    "town": "Edron",
+    "type": "house",
+    "name": "Cormaya Flats, Flat 02",
+    "size": 10,
+    "rent": 25000,
+    "status": {
+      "type": "rented"
+    }
+  },
+  {
+    "id": 54003,
+    "town": "Edron",
+    "type": "house",
+    "name": "Cormaya Flats, Flat 03",
+    "size": 16,
+    "rent": 50000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 54004,
+    "town": "Edron",
+    "type": "house",
+    "name": "Cormaya Flats, Flat 04",
+    "size": 16,
+    "rent": 50000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 54005,
+    "town": "Edron",
+    "type": "house",
+    "name": "Cormaya Flats, Flat 05",
+    "size": 10,
+    "rent": 25000,
+    "status": {
+      "type": "rented"
+    }
+  },
+  {
+    "id": 54006,
+    "town": "Edron",
+    "type": "house",
+    "name": "Cormaya Flats, Flat 06",
+    "size": 10,
+    "rent": 25000,
+    "status": {
+      "type": "rented"
+    }
+  },
+  {
+    "id": 54007,
+    "town": "Edron",
+    "type": "house",
+    "name": "Cormaya Flats, Flat 11",
+    "size": 22,
+    "rent": 100000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 54012,
+    "town": "Edron",
+    "type": "house",
+    "name": "Cormaya Flats, Flat 12",
+    "size": 22,
+    "rent": 100000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 54009,
+    "town": "Edron",
+    "type": "house",
+    "name": "Cormaya Flats, Flat 13",
+    "size": 16,
+    "rent": 25000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 54010,
+    "town": "Edron",
+    "type": "house",
+    "name": "Cormaya Flats, Flat 14",
+    "size": 16,
+    "rent": 25000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 50325,
+    "town": "Edron",
+    "type": "house",
+    "name": "Edron Flats, Basement Flat 1",
+    "size": 36,
+    "rent": 100000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 50326,
+    "town": "Edron",
+    "type": "house",
+    "name": "Edron Flats, Basement Flat 2",
+    "size": 36,
+    "rent": 100000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 50301,
+    "town": "Edron",
+    "type": "house",
+    "name": "Edron Flats, Flat 01",
+    "size": 10,
+    "rent": 50000,
+    "status": {
+      "type": "rented"
+    }
+  },
+  {
+    "id": 50302,
+    "town": "Edron",
+    "type": "house",
+    "name": "Edron Flats, Flat 02",
+    "size": 19,
+    "rent": 100000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 50303,
+    "town": "Edron",
+    "type": "house",
+    "name": "Edron Flats, Flat 03",
+    "size": 10,
+    "rent": 25000,
+    "status": {
+      "type": "rented"
+    }
+  },
+  {
+    "id": 50304,
+    "town": "Edron",
+    "type": "house",
+    "name": "Edron Flats, Flat 04",
+    "size": 10,
+    "rent": 25000,
+    "status": {
+      "type": "rented"
+    }
+  },
+  {
+    "id": 50305,
+    "town": "Edron",
+    "type": "house",
+    "name": "Edron Flats, Flat 05",
+    "size": 10,
+    "rent": 25000,
+    "status": {
+      "type": "auctionWithBid",
+      "bid": 1,
+      "expiryTime": "2023-09-19T11:00:00Z"
+    }
+  },
+  {
+    "id": 50306,
+    "town": "Edron",
+    "type": "house",
+    "name": "Edron Flats, Flat 06",
+    "size": 10,
+    "rent": 25000,
+    "status": {
+      "type": "rented"
+    }
+  },
+  {
+    "id": 50307,
+    "town": "Edron",
+    "type": "house",
+    "name": "Edron Flats, Flat 07",
+    "size": 10,
+    "rent": 25000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 50308,
+    "town": "Edron",
+    "type": "house",
+    "name": "Edron Flats, Flat 08",
+    "size": 10,
+    "rent": 25000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 50309,
+    "town": "Edron",
+    "type": "house",
+    "name": "Edron Flats, Flat 11",
+    "size": 29,
+    "rent": 100000,
+    "status": {
+      "type": "rented"
+    }
+  },
+  {
+    "id": 50311,
+    "town": "Edron",
+    "type": "house",
+    "name": "Edron Flats, Flat 12",
+    "size": 22,
+    "rent": 80000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 50312,
+    "town": "Edron",
+    "type": "house",
+    "name": "Edron Flats, Flat 13",
+    "size": 22,
+    "rent": 80000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 50315,
+    "town": "Edron",
+    "type": "house",
+    "name": "Edron Flats, Flat 14",
+    "size": 29,
+    "rent": 100000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 50317,
+    "town": "Edron",
+    "type": "house",
+    "name": "Edron Flats, Flat 21",
+    "size": 19,
+    "rent": 80000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 50318,
+    "town": "Edron",
+    "type": "house",
+    "name": "Edron Flats, Flat 22",
+    "size": 10,
+    "rent": 50000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 50319,
+    "town": "Edron",
+    "type": "house",
+    "name": "Edron Flats, Flat 23",
+    "size": 22,
+    "rent": 80000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 50321,
+    "town": "Edron",
+    "type": "house",
+    "name": "Edron Flats, Flat 24",
+    "size": 22,
+    "rent": 80000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 50323,
+    "town": "Edron",
+    "type": "house",
+    "name": "Edron Flats, Flat 25",
+    "size": 29,
+    "rent": 80000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 50703,
+    "town": "Edron",
+    "type": "house",
+    "name": "Magic Academy, Flat 1",
+    "size": 23,
+    "rent": 100000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 50704,
+    "town": "Edron",
+    "type": "house",
+    "name": "Magic Academy, Flat 2",
+    "size": 26,
+    "rent": 80000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 50705,
+    "town": "Edron",
+    "type": "house",
+    "name": "Magic Academy, Flat 3",
+    "size": 26,
+    "rent": 100000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 50706,
+    "town": "Edron",
+    "type": "house",
+    "name": "Magic Academy, Flat 4",
+    "size": 26,
+    "rent": 100000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 50707,
+    "town": "Edron",
+    "type": "house",
+    "name": "Magic Academy, Flat 5",
+    "size": 26,
+    "rent": 80000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 50702,
+    "town": "Edron",
+    "type": "house",
+    "name": "Magic Academy, Shop",
+    "size": 29,
+    "rent": 150000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 50604,
+    "town": "Edron",
+    "type": "house",
+    "name": "Sky Lane, Sea Tower",
+    "size": 95,
+    "rent": 300000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 52010,
+    "town": "Edron",
+    "type": "house",
+    "name": "Stonehome Flats, Flat 01",
+    "size": 10,
+    "rent": 25000,
+    "status": {
+      "type": "rented"
+    }
+  },
+  {
+    "id": 52011,
+    "town": "Edron",
+    "type": "house",
+    "name": "Stonehome Flats, Flat 02",
+    "size": 16,
+    "rent": 25000,
+    "status": {
+      "type": "rented"
+    }
+  },
+  {
+    "id": 52012,
+    "town": "Edron",
+    "type": "house",
+    "name": "Stonehome Flats, Flat 03",
+    "size": 22,
+    "rent": 80000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 52013,
+    "town": "Edron",
+    "type": "house",
+    "name": "Stonehome Flats, Flat 04",
+    "size": 22,
+    "rent": 80000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 52016,
+    "town": "Edron",
+    "type": "house",
+    "name": "Stonehome Flats, Flat 11",
+    "size": 16,
+    "rent": 50000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 52017,
+    "town": "Edron",
+    "type": "house",
+    "name": "Stonehome Flats, Flat 12",
+    "size": 16,
+    "rent": 50000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 52020,
+    "town": "Edron",
+    "type": "house",
+    "name": "Stonehome Flats, Flat 13",
+    "size": 22,
+    "rent": 80000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 52021,
+    "town": "Edron",
+    "type": "house",
+    "name": "Stonehome Flats, Flat 14",
+    "size": 22,
+    "rent": 80000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 52001,
+    "town": "Edron",
+    "type": "house",
+    "name": "Stonehome Village 1",
+    "size": 42,
+    "rent": 150000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 52002,
+    "town": "Edron",
+    "type": "house",
+    "name": "Stonehome Village 2",
+    "size": 16,
+    "rent": 50000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 52003,
+    "town": "Edron",
+    "type": "house",
+    "name": "Stonehome Village 3",
+    "size": 17,
+    "rent": 50000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 52004,
+    "town": "Edron",
+    "type": "house",
+    "name": "Stonehome Village 4",
+    "size": 21,
+    "rent": 80000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 52005,
+    "town": "Edron",
+    "type": "house",
+    "name": "Stonehome Village 5",
+    "size": 26,
+    "rent": 80000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 52006,
+    "town": "Edron",
+    "type": "house",
+    "name": "Stonehome Village 6",
+    "size": 30,
+    "rent": 100000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 52007,
+    "town": "Edron",
+    "type": "house",
+    "name": "Stonehome Village 7",
+    "size": 26,
+    "rent": 100000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 52008,
+    "town": "Edron",
+    "type": "house",
+    "name": "Stonehome Village 8",
+    "size": 17,
+    "rent": 25000,
+    "status": {
+      "type": "rented"
+    }
+  },
+  {
+    "id": 52009,
+    "town": "Edron",
+    "type": "house",
+    "name": "Stonehome Village 9",
+    "size": 17,
+    "rent": 50000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 50518,
+    "town": "Edron",
+    "type": "house",
+    "name": "Stronghold",
+    "size": 215,
+    "rent": 800000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 50501,
+    "town": "Edron",
+    "type": "house",
+    "name": "Wood Avenue 1",
+    "size": 37,
+    "rent": 200000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 50512,
+    "town": "Edron",
+    "type": "house",
+    "name": "Wood Avenue 10a",
+    "size": 32,
+    "rent": 200000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 50513,
+    "town": "Edron",
+    "type": "house",
+    "name": "Wood Avenue 10b",
+    "size": 31,
+    "rent": 200000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 50514,
+    "town": "Edron",
+    "type": "house",
+    "name": "Wood Avenue 11",
+    "size": 149,
+    "rent": 600000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 50502,
+    "town": "Edron",
+    "type": "house",
+    "name": "Wood Avenue 2",
+    "size": 37,
+    "rent": 200000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 50503,
+    "town": "Edron",
+    "type": "house",
+    "name": "Wood Avenue 3",
+    "size": 37,
+    "rent": 200000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 50504,
+    "town": "Edron",
+    "type": "house",
+    "name": "Wood Avenue 4",
+    "size": 37,
+    "rent": 200000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 50515,
+    "town": "Edron",
+    "type": "house",
+    "name": "Wood Avenue 4a",
+    "size": 31,
+    "rent": 150000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 50516,
+    "town": "Edron",
+    "type": "house",
+    "name": "Wood Avenue 4b",
+    "size": 31,
+    "rent": 150000,
+    "status": {
+      "type": "auctionWithBid",
+      "bid": 0,
+      "expiryTime": "2023-09-18T07:00:00Z"
+    }
+  },
+  {
+    "id": 50517,
+    "town": "Edron",
+    "type": "house",
+    "name": "Wood Avenue 4c",
+    "size": 37,
+    "rent": 200000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 50505,
+    "town": "Edron",
+    "type": "house",
+    "name": "Wood Avenue 5",
+    "size": 37,
+    "rent": 300000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 50506,
+    "town": "Edron",
+    "type": "house",
+    "name": "Wood Avenue 6a",
+    "size": 30,
+    "rent": 300000,
+    "status": {
+      "type": "rented"
+    }
+  },
+  {
+    "id": 50507,
+    "town": "Edron",
+    "type": "house",
+    "name": "Wood Avenue 6b",
+    "size": 30,
+    "rent": 200000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 50508,
+    "town": "Edron",
+    "type": "house",
+    "name": "Wood Avenue 7",
+    "size": 128,
+    "rent": 800000,
+    "status": {
+      "type": "rented"
+    }
+  },
+  {
+    "id": 50509,
+    "town": "Edron",
+    "type": "house",
+    "name": "Wood Avenue 8",
+    "size": 128,
+    "rent": 800000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 50510,
+    "town": "Edron",
+    "type": "house",
+    "name": "Wood Avenue 9a",
+    "size": 32,
+    "rent": 200000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  },
+  {
+    "id": 50511,
+    "town": "Edron",
+    "type": "house",
+    "name": "Wood Avenue 9b",
+    "size": 31,
+    "rent": 200000,
+    "status": {
+      "type": "auctionNoBid"
+    }
+  }
+]

@@ -1,12 +1,10 @@
-use std::net::{SocketAddr, TcpListener};
-use std::time::Duration;
+use std::net::TcpListener;
 
-use anyhow::{Context, Result};
+use anyhow::Result;
 use axum::{body::Body, http::Request, routing::get, Router};
-use http_cache_reqwest::{CACacheManager, Cache, CacheMode, HttpCache, HttpCacheOptions};
-use once_cell::sync::Lazy;
-use reqwest::{Client, Method};
-use reqwest_middleware::{ClientBuilder, ClientWithMiddleware};
+use clients::Client;
+use prelude::TibiaClient;
+use reqwest::Method;
 use tower_http::{
     classify::StatusInRangeAsFailures,
     compression::CompressionLayer,
@@ -17,6 +15,7 @@ use tower_http::{
 use tower_request_id::{RequestId, RequestIdLayer};
 use tracing::info_span;
 
+pub mod clients;
 mod handlers;
 pub mod models;
 mod prelude;
@@ -26,22 +25,30 @@ mod utils;
 use utils::*;
 
 #[derive(Clone)]
-pub struct AppState {
-    client: ClientWithMiddleware,
+pub struct AppState<S: Client> {
+    client: S,
 }
 
-fn app() -> Router {
+impl AppState<TibiaClient> {
+    pub fn with_client<S: Client>(client: S) -> AppState<S> {
+        AppState { client }
+    }
+}
+
+impl Default for AppState<TibiaClient> {
+    fn default() -> Self {
+        Self {
+            client: TibiaClient::default(),
+        }
+    }
+}
+
+pub fn app<C: Client>(state: AppState<C>) -> Router {
     let openapi_docs = openapi::create_openapi_docs();
-
-    let reqwest_client = create_client().expect("To create reqwest client");
-
-    let app_state = AppState {
-        client: reqwest_client,
-    };
 
     let public_service = ServeDir::new("public");
 
-    Router::new()
+    let app = Router::new()
         .route("/api/v1/towns", get(handlers::towns::get))
         .route("/api/v1/worlds", get(handlers::worlds::get))
         .route(
@@ -64,8 +71,9 @@ fn app() -> Router {
         .route("/api-docs", get(handlers::redocly::serve_redocly))
         .route("/__healthcheck", get(handlers::__healthcheck::get))
         .fallback_service(public_service)
-        .with_state(app_state)
-        .route("/openapi.json", get(handlers::redocly::serve_openapi))
+        .with_state(state);
+
+    app.route("/openapi.json", get(handlers::redocly::serve_openapi))
         .with_state(openapi_docs)
         .layer(CompressionLayer::new())
         .layer(
@@ -100,13 +108,13 @@ fn app() -> Router {
         .layer(RequestIdLayer)
 }
 
-pub async fn run(listener: TcpListener) -> Result<()> {
+pub async fn run(app: Router, listener: TcpListener) -> Result<()> {
     let addr = listener.local_addr()?;
 
     tracing::info!("Listening on {}", addr);
 
     axum::Server::from_tcp(listener)?
-        .serve(app().into_make_service())
+        .serve(app.into_make_service())
         .with_graceful_shutdown(async {
             tokio::signal::ctrl_c()
                 .await
@@ -115,56 +123,4 @@ pub async fn run(listener: TcpListener) -> Result<()> {
         .await?;
 
     Ok(())
-}
-
-// test helpers
-static TRACING: Lazy<()> = Lazy::new(|| {
-    let default_filter_level = "info".to_string();
-    let subscriber_name = "test".to_string();
-
-    if std::env::var("TEST_LOG").is_ok() {
-        let subscriber =
-            telemetry::get_subscriber(subscriber_name, default_filter_level, std::io::stdout);
-        telemetry::init_subscriber(subscriber);
-    } else {
-        let subscriber =
-            telemetry::get_subscriber(subscriber_name, default_filter_level, std::io::sink);
-        telemetry::init_subscriber(subscriber);
-    }
-});
-
-pub fn spawn_app() -> SocketAddr {
-    Lazy::force(&TRACING);
-
-    let listener = TcpListener::bind("127.0.0.1:0").expect("To bind to random port");
-    let addr = listener.local_addr().expect("To get local address");
-
-    tokio::spawn(run(listener));
-
-    addr
-}
-
-pub fn create_client() -> Result<ClientWithMiddleware> {
-    let reqwest_client = Client::builder()
-        .user_agent(
-            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:109.0) Gecko/20100101 Firefox/113.0",
-        )
-        .brotli(true)
-        .deflate(true)
-        .gzip(true)
-        .pool_idle_timeout(Duration::from_secs(15))
-        .pool_max_idle_per_host(10)
-        .build()
-        .context("Failed to create reqwest client")?;
-
-    let client = ClientBuilder::new(reqwest_client)
-        .with(Cache(HttpCache {
-            // Figure out how to use cache even though tibia sends incorrect cache headers
-            mode: CacheMode::NoStore,
-            manager: CACacheManager::default(),
-            options: HttpCacheOptions::default(),
-        }))
-        .build();
-
-    Ok(client)
 }
