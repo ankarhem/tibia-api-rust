@@ -7,7 +7,7 @@ use chrono::{Duration, Timelike};
 use futures::future::join_all;
 use itertools::Itertools;
 use regex::Regex;
-use reqwest::{Response};
+use reqwest::Response;
 
 use scraper::Selector;
 use serde::{Deserialize, Serialize};
@@ -26,7 +26,7 @@ pub struct QueryParams {
     /// The town for which to fetch residences
     #[param(example = "Thais")]
     town: String,
-    /// The type of residence to fetch
+    /// Filter residences by type
     #[serde(rename = "type")]
     residence_type: Option<ResidenceType>,
 }
