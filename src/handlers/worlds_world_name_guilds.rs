@@ -3,7 +3,7 @@ use axum::{
     extract::{Path, State},
     Json,
 };
-use reqwest::{Response};
+use reqwest::Response;
 use scraper::Selector;
 use tracing::instrument;
 
