@@ -59,7 +59,7 @@ async fn parse_worlds_page(response: Response) -> Result<WorldsResponse, ServerE
     println!("title: {}", title);
 
     if MAINTENANCE_TITLE == title {
-        return Err(TibiaClientError::Maintenance)?;
+        return Err(TibiaError::Maintenance)?;
     };
 
     let selector = Selector::parse(".main-content").expect("Invalid selector for main content");

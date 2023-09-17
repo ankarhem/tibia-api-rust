@@ -48,7 +48,7 @@ impl PathParams {
 pub async fn get<S: Client>(
     State(state): State<AppState<S>>,
     Path(path_params): Path<PathParams>,
-) -> Result<impl IntoResponse, ServerError> {
+) -> Result<Json<WorldDetails>, ServerError> {
     let client = &state.client;
     let world_name = path_params.world_name();
 
@@ -66,17 +66,14 @@ pub async fn get<S: Client>(
             e
         })?;
 
-    match world_details {
-        Some(d) => Ok(Json(d).into_response()),
-        None => Ok(StatusCode::NOT_FOUND.into_response()),
-    }
+    Ok(Json(world_details))
 }
 
 #[instrument(skip(response))]
 pub async fn parse_world_details_page(
     response: Response,
     world_name: &str,
-) -> Result<Option<WorldDetails>, ServerError> {
+) -> Result<WorldDetails, ServerError> {
     let text = response.text().await?;
     let document = scraper::Html::parse_document(&text);
 
@@ -88,7 +85,7 @@ pub async fn parse_world_details_page(
         .unwrap_or_default();
 
     if MAINTENANCE_TITLE == title {
-        return Err(TibiaClientError::Maintenance)?;
+        return Err(TibiaError::Maintenance)?;
     };
 
     let selector = Selector::parse(".main-content").expect("Invalid selector for main content");
@@ -104,7 +101,7 @@ pub async fn parse_world_details_page(
     // is a 404 page
     if tables.clone().count() == 1 {
         tracing::info!("World '{}' not found", world_name);
-        return Ok(None);
+        return Err(TibiaError::NotFound)?;
     }
 
     // skip first table
@@ -281,5 +278,5 @@ pub async fn parse_world_details_page(
         }
     }
 
-    Ok(Some(world_details))
+    Ok(world_details)
 }

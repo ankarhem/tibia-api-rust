@@ -70,7 +70,7 @@ async fn parse_towns_page(page: reqwest::Response) -> Result<Vec<String>, Server
         .unwrap_or_default();
 
     if MAINTENANCE_TITLE == title {
-        return Err(TibiaClientError::Maintenance)?;
+        return Err(TibiaError::Maintenance)?;
     };
 
     let selector = Selector::parse(".main-content").expect("Invalid selector for main content");

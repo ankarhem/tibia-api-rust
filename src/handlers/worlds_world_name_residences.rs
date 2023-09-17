@@ -5,6 +5,7 @@ use axum::{
     Json,
 };
 use chrono::{Duration, Timelike};
+use futures::future::join_all;
 use itertools::Itertools;
 use regex::Regex;
 use reqwest::{Response, StatusCode};
@@ -28,7 +29,7 @@ pub struct QueryParams {
     town: String,
     /// The type of residence to fetch
     #[serde(rename = "type")]
-    residence_type: ResidenceType,
+    residence_type: Option<ResidenceType>,
 }
 
 impl QueryParams {
@@ -36,7 +37,7 @@ impl QueryParams {
         self.town.to_string()
     }
 
-    pub fn residence_type(&self) -> ResidenceType {
+    pub fn residence_type(&self) -> Option<ResidenceType> {
         self.residence_type
     }
 }
@@ -61,18 +62,26 @@ pub async fn get<S: Client>(
     State(state): State<AppState<S>>,
     Path(path_params): Path<PathParams>,
     Query(query_params): Query<QueryParams>,
-) -> Result<impl IntoResponse, ServerError> {
+) -> Result<Json<Vec<Residence>>, ServerError> {
     let client = &state.client;
     let world_name = path_params.world_name();
     let town = query_params.town();
-    let residence_type = query_params.residence_type();
+    let residence_types = query_params
+        .residence_type()
+        .map(|t| vec![t])
+        .unwrap_or(vec![ResidenceType::House, ResidenceType::Guildhall]);
 
-    let residences = get_world_residences(client, &world_name, &residence_type, &town).await?;
+    let futures = residence_types
+        .iter()
+        .map(|residence_type| get_world_residences(client, &world_name, residence_type, &town));
 
-    match residences {
-        Some(r) => Ok(Json(r).into_response()),
-        None => Ok(StatusCode::NOT_FOUND.into_response()),
-    }
+    let residences = join_all(futures)
+        .await
+        .into_iter()
+        .collect::<Result<Vec<Vec<Residence>>, ServerError>>()?;
+
+    let residences = residences.into_iter().flatten().collect_vec();
+    Ok(Json(residences))
 }
 
 #[instrument(skip(client))]
@@ -81,7 +90,7 @@ pub async fn get_world_residences<S: Client>(
     world_name: &str,
     residence_type: &ResidenceType,
     town: &str,
-) -> Result<Option<Vec<Residence>>, ServerError> {
+) -> Result<Vec<Residence>, ServerError> {
     let response = client
         .fetch_residences_page(world_name, residence_type, town)
         .await?;
@@ -96,7 +105,7 @@ async fn parse_residences_page(
     world_name: &str,
     residence_type: &ResidenceType,
     town: &str,
-) -> Result<Option<Vec<Residence>>, ServerError> {
+) -> Result<Vec<Residence>, ServerError> {
     let text = response.text().await?;
     let document = scraper::Html::parse_document(&text);
 
@@ -108,7 +117,7 @@ async fn parse_residences_page(
         .unwrap_or_default();
 
     if MAINTENANCE_TITLE == title {
-        return Err(TibiaClientError::Maintenance)?;
+        return Err(TibiaError::Maintenance)?;
     };
 
     let selector = Selector::parse(".main-content").expect("Selector to be valid");
@@ -128,7 +137,7 @@ async fn parse_residences_page(
     // and we should 404
     let re = regex::Regex::new(&format!("(.*) in {town} on {world_name}")).unwrap();
     if re.find(title).is_none() {
-        return Ok(None);
+        return Err(TibiaError::NotFound)?;
     }
     let table_selector =
         Selector::parse(".TableContainer table.TableContent").expect("Selector to be valid");
@@ -136,7 +145,7 @@ async fn parse_residences_page(
 
     // assume 404
     if tables.clone().count() != 3 {
-        return Ok(None);
+        return Err(TibiaError::NotFound)?;
     }
 
     let row_selector = Selector::parse("tr").expect("Selector to be valid");
@@ -157,7 +166,7 @@ async fn parse_residences_page(
         // If it's an invalid town it will be `No <residence_type> found.`
         let column_count = row.text().count();
         if column_count == 1 {
-            return Ok(None);
+            return Err(TibiaError::NotFound)?;
         }
 
         let (name, size, rent, status) = row
@@ -262,5 +271,5 @@ async fn parse_residences_page(
         residences.push(residence)
     }
 
-    Ok(Some(residences))
+    Ok(residences)
 }

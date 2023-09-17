@@ -13,9 +13,11 @@ pub struct TibiaClient {
 }
 
 #[derive(thiserror::Error, Debug)]
-pub enum TibiaClientError {
+pub enum TibiaError {
     #[error("Tibia is currently undergoing maintenance")]
     Maintenance,
+    #[error("The content on the page is not what was requested")]
+    NotFound,
 }
 
 pub const MAINTENANCE_TITLE: &str =

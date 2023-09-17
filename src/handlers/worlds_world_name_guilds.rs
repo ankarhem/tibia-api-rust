@@ -30,7 +30,7 @@ use crate::{models::Guild, prelude::*, AppState};
 pub async fn get<S: Client>(
     State(state): State<AppState<S>>,
     Path(path_params): Path<PathParams>,
-) -> Result<impl IntoResponse, ServerError> {
+) -> Result<Json<Vec<Guild>>, ServerError> {
     let client = &state.client;
     let world_name = path_params.world_name();
 
@@ -43,14 +43,11 @@ pub async fn get<S: Client>(
         e
     })?;
 
-    match guilds {
-        Some(g) => Ok(Json(g).into_response()),
-        None => Ok(StatusCode::NOT_FOUND.into_response()),
-    }
+    Ok(Json(guilds))
 }
 
 #[instrument(skip(response))]
-async fn parse_guilds_page(response: Response) -> Result<Option<Vec<Guild>>, ServerError> {
+async fn parse_guilds_page(response: Response) -> Result<Vec<Guild>, ServerError> {
     let text = response.text().await?;
     let document = scraper::Html::parse_document(&text);
 
@@ -62,7 +59,7 @@ async fn parse_guilds_page(response: Response) -> Result<Option<Vec<Guild>>, Ser
         .unwrap_or_default();
 
     if MAINTENANCE_TITLE == title {
-        return Err(TibiaClientError::Maintenance)?;
+        return Err(TibiaError::Maintenance)?;
     };
 
     let selector = Selector::parse(".main-content").expect("Selector to be valid");
@@ -77,7 +74,7 @@ async fn parse_guilds_page(response: Response) -> Result<Option<Vec<Guild>>, Ser
 
     // assume 404
     if tables.clone().count() != 2 {
-        return Ok(None);
+        return Err(TibiaError::NotFound)?;
     }
 
     let mut guilds = vec![];
@@ -121,5 +118,5 @@ async fn parse_guilds_page(response: Response) -> Result<Option<Vec<Guild>>, Ser
         }
     }
 
-    Ok(Some(guilds))
+    Ok(guilds)
 }

@@ -34,7 +34,7 @@ use crate::{
 pub async fn get<S: Client>(
     State(state): State<AppState<S>>,
     Path(path_params): Path<PathParams>,
-) -> Result<impl IntoResponse, ServerError> {
+) -> Result<Json<KillStatistics>, ServerError> {
     let client = &state.client;
     let world_name = path_params.world_name();
 
@@ -49,17 +49,11 @@ pub async fn get<S: Client>(
         tracing::error!("Failed to parse kill statistics page: {:?}", e);
         e
     })?;
-
-    match guilds {
-        Some(g) => Ok(Json(g).into_response()),
-        None => Ok(StatusCode::NOT_FOUND.into_response()),
-    }
+    Ok(Json(guilds))
 }
 
 #[instrument(skip(response))]
-async fn parse_killstatistics_page(
-    response: Response,
-) -> Result<Option<KillStatistics>, ServerError> {
+async fn parse_killstatistics_page(response: Response) -> Result<KillStatistics, ServerError> {
     let text = response.text().await?;
     let document = scraper::Html::parse_document(&text);
 
@@ -71,7 +65,7 @@ async fn parse_killstatistics_page(
         .unwrap_or_default();
 
     if MAINTENANCE_TITLE == title {
-        return Err(TibiaClientError::Maintenance)?;
+        return Err(TibiaError::Maintenance)?;
     };
 
     let selector = Selector::parse(".main-content").expect("Selector to be valid");
@@ -87,7 +81,7 @@ async fn parse_killstatistics_page(
 
     // assume 404
     if cells.clone().count() == 0 {
-        return Ok(None);
+        return Err(TibiaError::NotFound)?;
     }
 
     let mut stats: KillStatistics = KillStatistics {
@@ -148,5 +142,5 @@ async fn parse_killstatistics_page(
         })
     }
 
-    Ok(Some(stats))
+    Ok(stats)
 }

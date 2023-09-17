@@ -2,7 +2,7 @@ use axum::{response::IntoResponse, Json};
 use reqwest::StatusCode;
 use utoipa::{schema, ToSchema};
 
-pub use crate::clients::{Client, TibiaClient, TibiaClientError, MAINTENANCE_TITLE};
+pub use crate::clients::{Client, TibiaClient, TibiaError, MAINTENANCE_TITLE};
 
 pub fn error_chain_fmt(
     e: &impl std::error::Error,
@@ -26,7 +26,7 @@ pub enum ServerError {
     #[error(transparent)]
     Unexpected(#[from] anyhow::Error),
     #[error(transparent)]
-    Client(#[from] TibiaClientError),
+    Client(#[from] TibiaError),
 }
 
 #[derive(serde::Serialize, serde::Deserialize, ToSchema)]
@@ -63,12 +63,13 @@ impl IntoResponse for ServerError {
                 StatusCode::INTERNAL_SERVER_ERROR.into_response()
             }
             ServerError::Client(e) => match e {
-                TibiaClientError::Maintenance => {
+                TibiaError::Maintenance => {
                     let body = PublicErrorBody::new(
                         "The tibia website failed to process the underlying request",
                     );
                     (reqwest::StatusCode::SERVICE_UNAVAILABLE, Json(body)).into_response()
                 }
+                TibiaError::NotFound => StatusCode::NOT_FOUND.into_response(),
             },
         }
     }
