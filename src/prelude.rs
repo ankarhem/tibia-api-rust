@@ -57,7 +57,7 @@ impl IntoResponse for ServerError {
                 let body = PublicErrorBody::new(
                     "The tibia website failed to process the underlying request",
                 );
-                (reqwest::StatusCode::SERVICE_UNAVAILABLE, Json(body)).into_response()
+                (StatusCode::SERVICE_UNAVAILABLE, Json(body)).into_response()
             }
             ServerError::Middleware(_) | ServerError::Unexpected(_) => {
                 StatusCode::INTERNAL_SERVER_ERROR.into_response()
@@ -67,9 +67,18 @@ impl IntoResponse for ServerError {
                     let body = PublicErrorBody::new(
                         "The tibia website failed to process the underlying request",
                     );
-                    (reqwest::StatusCode::SERVICE_UNAVAILABLE, Json(body)).into_response()
+                    (StatusCode::SERVICE_UNAVAILABLE, Json(body)).into_response()
+                }
+                TibiaError::UnsuccessfulRequest(StatusCode::FORBIDDEN) => {
+                    let body = PublicErrorBody::new(
+                        "Unable to process request due to upstream rate limiting",
+                    );
+                    (StatusCode::SERVICE_UNAVAILABLE, Json(body)).into_response()
                 }
                 TibiaError::NotFound => StatusCode::NOT_FOUND.into_response(),
+                TibiaError::Reqwest(_) | TibiaError::UnsuccessfulRequest(_) => {
+                    StatusCode::INTERNAL_SERVER_ERROR.into_response()
+                }
             },
         }
     }

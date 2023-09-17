@@ -54,6 +54,13 @@ pub async fn get<S: Client>(
         e
     })?;
 
+    match state.towns.lock() {
+        Ok(mut guard) => {
+            *guard = towns.clone();
+        }
+        Err(poisoned) => Err(anyhow::anyhow!("Mutex poisoned"))?,
+    }
+
     Ok(Json(towns))
 }
 

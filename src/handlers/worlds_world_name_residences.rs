@@ -25,15 +25,15 @@ use crate::{
 pub struct QueryParams {
     /// The town for which to fetch residences
     #[param(example = "Thais")]
-    town: String,
+    town: Option<String>,
     /// Filter residences by type
     #[serde(rename = "type")]
     residence_type: Option<ResidenceType>,
 }
 
 impl QueryParams {
-    pub fn town(&self) -> String {
-        self.town.to_string()
+    pub fn town(&self) -> Option<String> {
+        self.town.clone()
     }
 
     pub fn residence_type(&self) -> Option<ResidenceType> {
@@ -64,15 +64,28 @@ pub async fn get<S: Client>(
 ) -> Result<Json<Vec<Residence>>, ServerError> {
     let client = &state.client;
     let world_name = path_params.world_name();
-    let town = query_params.town();
+    let towns = match query_params.town() {
+        Some(t) => vec![t],
+        None => {
+            let towns = state.towns.lock().unwrap();
+            towns.clone()
+        }
+    };
     let residence_types = query_params
         .residence_type()
         .map(|t| vec![t])
         .unwrap_or(vec![ResidenceType::House, ResidenceType::Guildhall]);
 
-    let futures = residence_types
-        .iter()
-        .map(|residence_type| get_world_residences(client, &world_name, residence_type, &town));
+    let mut combinations = Vec::with_capacity(towns.len() * residence_types.len());
+    for town in &towns {
+        for residence_type in &residence_types {
+            combinations.push((residence_type, town))
+        }
+    }
+
+    let futures = combinations.iter().map(|(residence_type, town)| {
+        get_world_residences(client, &world_name, residence_type, town)
+    });
 
     let residences = join_all(futures)
         .await
@@ -92,8 +105,17 @@ pub async fn get_world_residences<S: Client>(
 ) -> Result<Vec<Residence>, ServerError> {
     let response = client
         .fetch_residences_page(world_name, residence_type, town)
-        .await?;
-    let houses = parse_residences_page(response, world_name, residence_type, town).await?;
+        .await
+        .map_err(|e| {
+            tracing::error!("Failed to fetch residence page: {:?}", e);
+            e
+        })?;
+    let houses = parse_residences_page(response, world_name, residence_type, town)
+        .await
+        .map_err(|e| {
+            tracing::error!("Failed to parse residence page: {:?}", e);
+            e
+        })?;
 
     Ok(houses)
 }
@@ -134,7 +156,8 @@ async fn parse_residences_page(
 
     // If this doesn't match, a complex (invalid) town has been passed
     // and we should 404
-    let re = regex::Regex::new(&format!("(.*) in {town} on {world_name}")).unwrap();
+    let re =
+        regex::Regex::new(&format!("(.*) in {town} on {world_name}")).context("Invalid regex")?;
     if re.find(title).is_none() {
         return Err(TibiaError::NotFound)?;
     }

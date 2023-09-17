@@ -1,5 +1,8 @@
 use http::response;
-use tibia_api::{clients::Client, models::ResidenceType};
+use tibia_api::{
+    clients::{Client, TibiaError},
+    models::ResidenceType,
+};
 
 #[derive(Clone)]
 pub struct MockedClient {
@@ -21,7 +24,7 @@ impl MockedClient {
         }
     }
 
-    fn mocked(&self) -> Result<reqwest::Response, reqwest_middleware::Error> {
+    fn mocked(&self) -> Result<reqwest::Response, TibiaError> {
         let body = self.body.clone().unwrap_or_default();
         let response = response::Response::builder()
             .status(self.status)
@@ -44,32 +47,29 @@ impl Default for MockedClient {
 
 #[async_trait::async_trait]
 impl Client for MockedClient {
-    async fn fetch_towns_page(&self) -> Result<reqwest::Response, reqwest_middleware::Error> {
+    async fn fetch_towns_page(&self) -> Result<reqwest::Response, TibiaError> {
         self.mocked()
     }
 
-    async fn fetch_worlds_page(&self) -> Result<reqwest::Response, reqwest_middleware::Error> {
+    async fn fetch_worlds_page(&self) -> Result<reqwest::Response, TibiaError> {
         self.mocked()
     }
 
     async fn fetch_world_details_page(
         &self,
         _world_name: &str,
-    ) -> Result<reqwest::Response, reqwest_middleware::Error> {
+    ) -> Result<reqwest::Response, TibiaError> {
         self.mocked()
     }
 
-    async fn fetch_guilds_page(
-        &self,
-        _world_name: &str,
-    ) -> Result<reqwest::Response, reqwest_middleware::Error> {
+    async fn fetch_guilds_page(&self, _world_name: &str) -> Result<reqwest::Response, TibiaError> {
         self.mocked()
     }
 
     async fn fetch_killstatistics_page(
         &self,
         _world_name: &str,
-    ) -> Result<reqwest::Response, reqwest_middleware::Error> {
+    ) -> Result<reqwest::Response, TibiaError> {
         self.mocked()
     }
 
@@ -78,7 +78,7 @@ impl Client for MockedClient {
         _world_name: &str,
         _residence_type: &ResidenceType,
         _town: &str,
-    ) -> Result<reqwest::Response, reqwest_middleware::Error> {
+    ) -> Result<reqwest::Response, TibiaError> {
         self.mocked()
     }
 }
