@@ -52,10 +52,13 @@ impl std::fmt::Debug for ServerError {
 impl IntoResponse for ServerError {
     fn into_response(self) -> axum::response::Response {
         match self {
-            ServerError::Middleware(reqwest_middleware::Error::Reqwest(e))
-            | ServerError::Reqwest(e) => match e.status() {
-                _ => StatusCode::INTERNAL_SERVER_ERROR.into_response(),
-            },
+            ServerError::Middleware(reqwest_middleware::Error::Reqwest(_))
+            | ServerError::Reqwest(_) => {
+                let body = PublicErrorBody::new(
+                    "The tibia website failed to process the underlying request",
+                );
+                (reqwest::StatusCode::SERVICE_UNAVAILABLE, Json(body)).into_response()
+            }
             ServerError::Middleware(_) | ServerError::Unexpected(_) => {
                 StatusCode::INTERNAL_SERVER_ERROR.into_response()
             }
