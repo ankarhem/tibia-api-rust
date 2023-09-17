@@ -2,7 +2,7 @@ use axum::{response::IntoResponse, Json};
 use reqwest::StatusCode;
 use utoipa::{schema, ToSchema};
 
-pub use crate::clients::{Client, TibiaClient};
+pub use crate::clients::{Client, TibiaClient, TibiaClientError, MAINTENANCE_TITLE};
 
 pub fn error_chain_fmt(
     e: &impl std::error::Error,
@@ -25,12 +25,22 @@ pub enum ServerError {
     Middleware(#[from] reqwest_middleware::Error),
     #[error(transparent)]
     Unexpected(#[from] anyhow::Error),
+    #[error(transparent)]
+    Client(#[from] TibiaClientError),
 }
 
 #[derive(serde::Serialize, serde::Deserialize, ToSchema)]
 pub struct PublicErrorBody {
     #[schema(example = "The tibia website failed to process the underlying request")]
     message: String,
+}
+
+impl PublicErrorBody {
+    pub fn new(message: &str) -> Self {
+        PublicErrorBody {
+            message: message.into(),
+        }
+    }
 }
 
 impl std::fmt::Debug for ServerError {
@@ -44,19 +54,19 @@ impl IntoResponse for ServerError {
         match self {
             ServerError::Middleware(reqwest_middleware::Error::Reqwest(e))
             | ServerError::Reqwest(e) => match e.status() {
-                Some(StatusCode::NOT_FOUND) => StatusCode::NOT_FOUND.into_response(),
-                Some(_) => {
-                    let body = PublicErrorBody {
-                        message: "The tibia website failed to process the underlying request"
-                            .into(),
-                    };
-                    (StatusCode::SERVICE_UNAVAILABLE, Json(body)).into_response()
-                }
                 _ => StatusCode::INTERNAL_SERVER_ERROR.into_response(),
             },
             ServerError::Middleware(_) | ServerError::Unexpected(_) => {
                 StatusCode::INTERNAL_SERVER_ERROR.into_response()
             }
+            ServerError::Client(e) => match e {
+                TibiaClientError::Maintenance => {
+                    let body = PublicErrorBody::new(
+                        "The tibia website failed to process the underlying request",
+                    );
+                    (reqwest::StatusCode::SERVICE_UNAVAILABLE, Json(body)).into_response()
+                }
+            },
         }
     }
 }

@@ -44,10 +44,9 @@ impl PathParams {
     ),
     tag = "Worlds"
 )]
-// #[axum::debug_handler]
 #[instrument(name = "Get World", skip(state))]
-pub async fn get(
-    State(state): State<AppState>,
+pub async fn get<S: Client>(
+    State(state): State<AppState<S>>,
     Path(path_params): Path<PathParams>,
 ) -> Result<impl IntoResponse, ServerError> {
     let client = &state.client;
@@ -77,9 +76,20 @@ pub async fn get(
 pub async fn parse_world_details_page(
     response: Response,
     world_name: &str,
-) -> Result<Option<WorldDetails>> {
+) -> Result<Option<WorldDetails>, ServerError> {
     let text = response.text().await?;
     let document = scraper::Html::parse_document(&text);
+
+    let title_selector = Selector::parse("title").expect("Invalid selector for title");
+    let title = document
+        .select(&title_selector)
+        .next()
+        .and_then(|t| t.text().next())
+        .unwrap_or_default();
+
+    if MAINTENANCE_TITLE == title {
+        return Err(TibiaClientError::Maintenance)?;
+    };
 
     let selector = Selector::parse(".main-content").expect("Invalid selector for main content");
     let main_content = &document
@@ -233,7 +243,7 @@ pub async fn parse_world_details_page(
                 return Err(anyhow!(format!(
                     "Unexpected header {:?}",
                     header.inner_html()
-                )))
+                )))?
             }
         }
     }
@@ -260,9 +270,11 @@ pub async fn parse_world_details_page(
                 .next()
                 .context("Player name not found")?
                 .to_string();
+
+            let level_html = level.inner_html();
             let player = Player {
                 name: player_name,
-                level: level.inner_html().parse()?,
+                level: level_html.parse().context("Failed to parse player level")?,
                 vocation,
             };
             world_details.players_online.push(player);

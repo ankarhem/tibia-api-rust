@@ -30,10 +30,9 @@ use crate::{
     ),
     tag = "Worlds"
 )]
-#[instrument(skip(state))]
 #[instrument(name = "Get Kill Statistics", skip(state))]
-pub async fn get(
-    State(state): State<AppState>,
+pub async fn get<S: Client>(
+    State(state): State<AppState<S>>,
     Path(path_params): Path<PathParams>,
 ) -> Result<impl IntoResponse, ServerError> {
     let client = &state.client;
@@ -58,9 +57,22 @@ pub async fn get(
 }
 
 #[instrument(skip(response))]
-async fn parse_killstatistics_page(response: Response) -> Result<Option<KillStatistics>> {
+async fn parse_killstatistics_page(
+    response: Response,
+) -> Result<Option<KillStatistics>, ServerError> {
     let text = response.text().await?;
     let document = scraper::Html::parse_document(&text);
+
+    let title_selector = Selector::parse("title").expect("Invalid selector for title");
+    let title = document
+        .select(&title_selector)
+        .next()
+        .and_then(|t| t.text().next())
+        .unwrap_or_default();
+
+    if MAINTENANCE_TITLE == title {
+        return Err(TibiaClientError::Maintenance)?;
+    };
 
     let selector = Selector::parse(".main-content").expect("Selector to be valid");
     let main_content = document
@@ -100,25 +112,33 @@ async fn parse_killstatistics_page(response: Response) -> Result<Option<KillStat
         // handle the last row
         if name == "Total" {
             stats.total_last_day = KilledAmounts {
-                killed_players: kp_day.parse()?,
-                killed_by_players: kbp_day.parse()?,
+                killed_players: kp_day.parse().context("Failed to parse killed_players")?,
+                killed_by_players: kbp_day
+                    .parse()
+                    .context("Failed to parse killed_by_players")?,
             };
 
             stats.total_last_week = KilledAmounts {
-                killed_players: kp_week.parse()?,
-                killed_by_players: kbp_week.parse()?,
+                killed_players: kp_week.parse().context("Failed to parse killed_players")?,
+                killed_by_players: kbp_week
+                    .parse()
+                    .context("Failed to parse killed_by_players")?,
             };
             continue;
         }
 
         let last_day = KilledAmounts {
-            killed_players: kp_day.parse()?,
-            killed_by_players: kbp_day.parse()?,
+            killed_players: kp_day.parse().context("Failed to parse killed_players")?,
+            killed_by_players: kbp_day
+                .parse()
+                .context("Failed to parse killed_by_players")?,
         };
 
         let last_week = KilledAmounts {
-            killed_players: kp_week.parse()?,
-            killed_by_players: kbp_week.parse()?,
+            killed_players: kp_week.parse().context("Failed to parse killed_players")?,
+            killed_by_players: kbp_week
+                .parse()
+                .context("Failed to parse killed_by_players")?,
         };
 
         stats.races.push(RaceKillStatistics {

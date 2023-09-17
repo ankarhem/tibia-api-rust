@@ -1,0 +1,737 @@
+{
+  "playersOnlineTotal": 7015,
+  "recordPlayers": 64028,
+  "recordDate": "2007-11-28T18:26:00Z",
+  "worlds": [
+    {
+      "name": "Antica",
+      "playersOnlineCount": 438,
+      "location": "europe",
+      "pvpType": "open",
+      "battlEye": true,
+      "battlEyeDate": "2017-08-29",
+      "premiumRequired": false,
+      "gameWorldType": "regular"
+    },
+    {
+      "name": "Astera",
+      "playersOnlineCount": 65,
+      "location": "northAmerica",
+      "pvpType": "optional",
+      "battlEye": true,
+      "battlEyeDate": "2017-09-12",
+      "premiumRequired": false,
+      "gameWorldType": "regular"
+    },
+    {
+      "name": "Axera",
+      "playersOnlineCount": 9,
+      "location": "northAmerica",
+      "pvpType": "open",
+      "battlEye": true,
+      "premiumRequired": false,
+      "transferType": "blocked",
+      "gameWorldType": "regular"
+    },
+    {
+      "name": "Belobra",
+      "playersOnlineCount": 74,
+      "location": "southAmerica",
+      "pvpType": "optional",
+      "battlEye": true,
+      "battlEyeDate": "2017-06-22",
+      "premiumRequired": false,
+      "gameWorldType": "regular"
+    },
+    {
+      "name": "Bombra",
+      "playersOnlineCount": 17,
+      "location": "southAmerica",
+      "pvpType": "open",
+      "battlEye": true,
+      "premiumRequired": false,
+      "transferType": "blocked",
+      "gameWorldType": "regular"
+    },
+    {
+      "name": "Bona",
+      "playersOnlineCount": 299,
+      "location": "europe",
+      "pvpType": "optional",
+      "battlEye": true,
+      "battlEyeDate": "2018-04-19",
+      "premiumRequired": false,
+      "gameWorldType": "regular"
+    },
+    {
+      "name": "Calmera",
+      "playersOnlineCount": 53,
+      "location": "northAmerica",
+      "pvpType": "optional",
+      "battlEye": true,
+      "battlEyeDate": "2017-09-12",
+      "premiumRequired": false,
+      "gameWorldType": "regular"
+    },
+    {
+      "name": "Castela",
+      "playersOnlineCount": 31,
+      "location": "europe",
+      "pvpType": "open",
+      "battlEye": true,
+      "premiumRequired": false,
+      "transferType": "blocked",
+      "gameWorldType": "regular"
+    },
+    {
+      "name": "Celebra",
+      "playersOnlineCount": 47,
+      "location": "southAmerica",
+      "pvpType": "optional",
+      "battlEye": true,
+      "battlEyeDate": "2018-10-29",
+      "premiumRequired": false,
+      "gameWorldType": "regular"
+    },
+    {
+      "name": "Celesta",
+      "playersOnlineCount": 225,
+      "location": "europe",
+      "pvpType": "optional",
+      "battlEye": true,
+      "battlEyeDate": "2017-09-05",
+      "premiumRequired": false,
+      "gameWorldType": "regular"
+    },
+    {
+      "name": "Collabra",
+      "playersOnlineCount": 47,
+      "location": "southAmerica",
+      "pvpType": "optional",
+      "battlEye": true,
+      "premiumRequired": false,
+      "gameWorldType": "regular"
+    },
+    {
+      "name": "Damora",
+      "playersOnlineCount": 187,
+      "location": "europe",
+      "pvpType": "optional",
+      "battlEye": true,
+      "premiumRequired": false,
+      "gameWorldType": "regular"
+    },
+    {
+      "name": "Descubra",
+      "playersOnlineCount": 61,
+      "location": "southAmerica",
+      "pvpType": "optional",
+      "battlEye": true,
+      "premiumRequired": false,
+      "gameWorldType": "regular"
+    },
+    {
+      "name": "Dia",
+      "playersOnlineCount": 287,
+      "location": "europe",
+      "pvpType": "optional",
+      "battlEye": true,
+      "premiumRequired": false,
+      "transferType": "blocked",
+      "gameWorldType": "regular"
+    },
+    {
+      "name": "Epoca",
+      "playersOnlineCount": 45,
+      "location": "europe",
+      "pvpType": "retroOpen",
+      "battlEye": true,
+      "battlEyeDate": "2018-04-19",
+      "premiumRequired": false,
+      "gameWorldType": "regular"
+    },
+    {
+      "name": "Esmera",
+      "playersOnlineCount": 7,
+      "location": "northAmerica",
+      "pvpType": "optional",
+      "battlEye": true,
+      "premiumRequired": false,
+      "transferType": "blocked",
+      "gameWorldType": "regular"
+    },
+    {
+      "name": "Etebra",
+      "playersOnlineCount": 58,
+      "location": "southAmerica",
+      "pvpType": "optional",
+      "battlEye": true,
+      "premiumRequired": false,
+      "transferType": "blocked",
+      "gameWorldType": "regular"
+    },
+    {
+      "name": "Ferobra",
+      "playersOnlineCount": 52,
+      "location": "southAmerica",
+      "pvpType": "open",
+      "battlEye": true,
+      "battlEyeDate": "2017-07-04",
+      "premiumRequired": false,
+      "gameWorldType": "regular"
+    },
+    {
+      "name": "Firmera",
+      "playersOnlineCount": 8,
+      "location": "northAmerica",
+      "pvpType": "retroOpen",
+      "battlEye": true,
+      "battlEyeDate": "2018-04-19",
+      "premiumRequired": false,
+      "gameWorldType": "regular"
+    },
+    {
+      "name": "Gentebra",
+      "playersOnlineCount": 92,
+      "location": "southAmerica",
+      "pvpType": "optional",
+      "battlEye": true,
+      "battlEyeDate": "2017-12-12",
+      "premiumRequired": false,
+      "gameWorldType": "regular"
+    },
+    {
+      "name": "Gladera",
+      "playersOnlineCount": 86,
+      "location": "northAmerica",
+      "pvpType": "optional",
+      "battlEye": true,
+      "battlEyeDate": "2018-04-19",
+      "premiumRequired": false,
+      "gameWorldType": "regular"
+    },
+    {
+      "name": "Gravitera",
+      "playersOnlineCount": 28,
+      "location": "northAmerica",
+      "pvpType": "retroHardcore",
+      "battlEye": true,
+      "premiumRequired": false,
+      "transferType": "blocked",
+      "gameWorldType": "regular"
+    },
+    {
+      "name": "Guerribra",
+      "playersOnlineCount": 69,
+      "location": "southAmerica",
+      "pvpType": "retroOpen",
+      "battlEye": true,
+      "premiumRequired": false,
+      "gameWorldType": "regular"
+    },
+    {
+      "name": "Harmonia",
+      "playersOnlineCount": 220,
+      "location": "europe",
+      "pvpType": "optional",
+      "battlEye": true,
+      "battlEyeDate": "2017-09-05",
+      "premiumRequired": false,
+      "gameWorldType": "regular"
+    },
+    {
+      "name": "Havera",
+      "playersOnlineCount": 61,
+      "location": "northAmerica",
+      "pvpType": "open",
+      "battlEye": true,
+      "battlEyeDate": "2021-12-06",
+      "premiumRequired": false,
+      "gameWorldType": "regular"
+    },
+    {
+      "name": "Honbra",
+      "playersOnlineCount": 50,
+      "location": "southAmerica",
+      "pvpType": "open",
+      "battlEye": true,
+      "premiumRequired": false,
+      "gameWorldType": "regular"
+    },
+    {
+      "name": "Impulsa",
+      "playersOnlineCount": 25,
+      "location": "europe",
+      "pvpType": "retroOpen",
+      "battlEye": true,
+      "premiumRequired": false,
+      "gameWorldType": "regular"
+    },
+    {
+      "name": "Inabra",
+      "playersOnlineCount": 87,
+      "location": "southAmerica",
+      "pvpType": "open",
+      "battlEye": true,
+      "battlEyeDate": "2017-12-12",
+      "premiumRequired": false,
+      "gameWorldType": "regular"
+    },
+    {
+      "name": "Issobra",
+      "playersOnlineCount": 18,
+      "location": "southAmerica",
+      "pvpType": "optional",
+      "battlEye": true,
+      "premiumRequired": false,
+      "transferType": "blocked",
+      "gameWorldType": "regular"
+    },
+    {
+      "name": "Jacabra",
+      "playersOnlineCount": 20,
+      "location": "southAmerica",
+      "pvpType": "retroHardcore",
+      "battlEye": true,
+      "premiumRequired": false,
+      "transferType": "blocked",
+      "gameWorldType": "regular"
+    },
+    {
+      "name": "Jadebra",
+      "playersOnlineCount": 81,
+      "location": "southAmerica",
+      "pvpType": "open",
+      "battlEye": true,
+      "premiumRequired": false,
+      "gameWorldType": "regular"
+    },
+    {
+      "name": "Jaguna",
+      "playersOnlineCount": 295,
+      "location": "europe",
+      "pvpType": "open",
+      "battlEye": true,
+      "premiumRequired": true,
+      "transferType": "blocked",
+      "gameWorldType": "regular"
+    },
+    {
+      "name": "Kalibra",
+      "playersOnlineCount": 64,
+      "location": "southAmerica",
+      "pvpType": "optional",
+      "battlEye": true,
+      "battlEyeDate": "2017-12-12",
+      "premiumRequired": false,
+      "gameWorldType": "regular"
+    },
+    {
+      "name": "Kardera",
+      "playersOnlineCount": 2,
+      "location": "northAmerica",
+      "pvpType": "retroOpen",
+      "battlEye": true,
+      "premiumRequired": false,
+      "transferType": "blocked",
+      "gameWorldType": "regular"
+    },
+    {
+      "name": "Kendria",
+      "playersOnlineCount": 180,
+      "location": "europe",
+      "pvpType": "open",
+      "battlEye": true,
+      "premiumRequired": false,
+      "gameWorldType": "regular"
+    },
+    {
+      "name": "Lobera",
+      "playersOnlineCount": 106,
+      "location": "northAmerica",
+      "pvpType": "open",
+      "battlEye": true,
+      "battlEyeDate": "2018-04-19",
+      "premiumRequired": false,
+      "gameWorldType": "regular"
+    },
+    {
+      "name": "Luminera",
+      "playersOnlineCount": 50,
+      "location": "northAmerica",
+      "pvpType": "optional",
+      "battlEye": true,
+      "battlEyeDate": "2017-09-05",
+      "premiumRequired": false,
+      "gameWorldType": "regular"
+    },
+    {
+      "name": "Lutabra",
+      "playersOnlineCount": 21,
+      "location": "southAmerica",
+      "pvpType": "retroOpen",
+      "battlEye": true,
+      "battlEyeDate": "2017-12-12",
+      "premiumRequired": false,
+      "gameWorldType": "regular"
+    },
+    {
+      "name": "Menera",
+      "playersOnlineCount": 48,
+      "location": "northAmerica",
+      "pvpType": "optional",
+      "battlEye": true,
+      "battlEyeDate": "2017-09-05",
+      "premiumRequired": false,
+      "gameWorldType": "regular"
+    },
+    {
+      "name": "Monza",
+      "playersOnlineCount": 201,
+      "location": "europe",
+      "pvpType": "optional",
+      "battlEye": true,
+      "battlEyeDate": "2018-04-19",
+      "premiumRequired": false,
+      "gameWorldType": "regular"
+    },
+    {
+      "name": "Mykera",
+      "playersOnlineCount": 5,
+      "location": "northAmerica",
+      "pvpType": "retroOpen",
+      "battlEye": true,
+      "premiumRequired": false,
+      "gameWorldType": "regular"
+    },
+    {
+      "name": "Nadora",
+      "playersOnlineCount": 53,
+      "location": "europe",
+      "pvpType": "optional",
+      "battlEye": true,
+      "premiumRequired": false,
+      "transferType": "blocked",
+      "gameWorldType": "regular"
+    },
+    {
+      "name": "Nefera",
+      "playersOnlineCount": 75,
+      "location": "northAmerica",
+      "pvpType": "optional",
+      "battlEye": true,
+      "battlEyeDate": "2018-04-19",
+      "premiumRequired": false,
+      "gameWorldType": "regular"
+    },
+    {
+      "name": "Nevia",
+      "playersOnlineCount": 272,
+      "location": "europe",
+      "pvpType": "optional",
+      "battlEye": true,
+      "premiumRequired": false,
+      "gameWorldType": "regular"
+    },
+    {
+      "name": "Obscubra",
+      "playersOnlineCount": 39,
+      "location": "southAmerica",
+      "pvpType": "retroHardcore",
+      "battlEye": true,
+      "premiumRequired": false,
+      "gameWorldType": "regular"
+    },
+    {
+      "name": "Ombra",
+      "playersOnlineCount": 40,
+      "location": "southAmerica",
+      "pvpType": "open",
+      "battlEye": true,
+      "premiumRequired": false,
+      "gameWorldType": "regular"
+    },
+    {
+      "name": "Ousabra",
+      "playersOnlineCount": 2,
+      "location": "southAmerica",
+      "pvpType": "retroOpen",
+      "battlEye": true,
+      "premiumRequired": false,
+      "transferType": "blocked",
+      "gameWorldType": "regular"
+    },
+    {
+      "name": "Pacera",
+      "playersOnlineCount": 51,
+      "location": "northAmerica",
+      "pvpType": "optional",
+      "battlEye": true,
+      "battlEyeDate": "2017-09-12",
+      "premiumRequired": false,
+      "gameWorldType": "regular"
+    },
+    {
+      "name": "Peloria",
+      "playersOnlineCount": 189,
+      "location": "europe",
+      "pvpType": "open",
+      "battlEye": true,
+      "battlEyeDate": "2017-10-19",
+      "premiumRequired": false,
+      "gameWorldType": "regular"
+    },
+    {
+      "name": "Premia",
+      "playersOnlineCount": 80,
+      "location": "europe",
+      "pvpType": "open",
+      "battlEye": true,
+      "battlEyeDate": "2017-09-05",
+      "premiumRequired": true,
+      "gameWorldType": "regular"
+    },
+    {
+      "name": "Pulsera",
+      "playersOnlineCount": 51,
+      "location": "northAmerica",
+      "pvpType": "open",
+      "battlEye": true,
+      "premiumRequired": false,
+      "gameWorldType": "regular"
+    },
+    {
+      "name": "Quelibra",
+      "playersOnlineCount": 71,
+      "location": "southAmerica",
+      "pvpType": "open",
+      "battlEye": true,
+      "battlEyeDate": "2017-12-12",
+      "premiumRequired": false,
+      "gameWorldType": "regular"
+    },
+    {
+      "name": "Quintera",
+      "playersOnlineCount": 46,
+      "location": "northAmerica",
+      "pvpType": "open",
+      "battlEye": true,
+      "battlEyeDate": "2017-10-19",
+      "premiumRequired": false,
+      "gameWorldType": "regular"
+    },
+    {
+      "name": "Rasteibra",
+      "playersOnlineCount": 72,
+      "location": "southAmerica",
+      "pvpType": "open",
+      "battlEye": true,
+      "premiumRequired": false,
+      "gameWorldType": "regular"
+    },
+    {
+      "name": "Refugia",
+      "playersOnlineCount": 171,
+      "location": "europe",
+      "pvpType": "optional",
+      "battlEye": true,
+      "battlEyeDate": "2017-09-12",
+      "premiumRequired": false,
+      "gameWorldType": "regular"
+    },
+    {
+      "name": "Retalia",
+      "playersOnlineCount": 113,
+      "location": "europe",
+      "pvpType": "retroHardcore",
+      "battlEye": true,
+      "premiumRequired": false,
+      "gameWorldType": "regular"
+    },
+    {
+      "name": "Runera",
+      "playersOnlineCount": 161,
+      "location": "northAmerica",
+      "pvpType": "open",
+      "battlEye": true,
+      "premiumRequired": true,
+      "transferType": "blocked",
+      "gameWorldType": "regular"
+    },
+    {
+      "name": "Secura",
+      "playersOnlineCount": 520,
+      "location": "europe",
+      "pvpType": "optional",
+      "battlEye": true,
+      "battlEyeDate": "2017-09-05",
+      "premiumRequired": false,
+      "gameWorldType": "regular"
+    },
+    {
+      "name": "Serdebra",
+      "playersOnlineCount": 68,
+      "location": "southAmerica",
+      "pvpType": "open",
+      "battlEye": true,
+      "battlEyeDate": "2017-05-17",
+      "premiumRequired": false,
+      "gameWorldType": "regular"
+    },
+    {
+      "name": "Solidera",
+      "playersOnlineCount": 65,
+      "location": "northAmerica",
+      "pvpType": "open",
+      "battlEye": true,
+      "battlEyeDate": "2018-04-19",
+      "premiumRequired": false,
+      "gameWorldType": "regular"
+    },
+    {
+      "name": "Syrena",
+      "playersOnlineCount": 17,
+      "location": "europe",
+      "pvpType": "retroOpen",
+      "battlEye": true,
+      "premiumRequired": false,
+      "transferType": "blocked",
+      "gameWorldType": "regular"
+    },
+    {
+      "name": "Talera",
+      "playersOnlineCount": 55,
+      "location": "northAmerica",
+      "pvpType": "open",
+      "battlEye": true,
+      "battlEyeDate": "2018-04-19",
+      "premiumRequired": false,
+      "gameWorldType": "regular"
+    },
+    {
+      "name": "Thyria",
+      "playersOnlineCount": 226,
+      "location": "europe",
+      "pvpType": "open",
+      "battlEye": true,
+      "battlEyeDate": "2021-12-06",
+      "premiumRequired": false,
+      "gameWorldType": "regular"
+    },
+    {
+      "name": "Tornabra",
+      "playersOnlineCount": 190,
+      "location": "southAmerica",
+      "pvpType": "open",
+      "battlEye": true,
+      "premiumRequired": true,
+      "transferType": "blocked",
+      "gameWorldType": "regular"
+    },
+    {
+      "name": "Ustebra",
+      "playersOnlineCount": 63,
+      "location": "southAmerica",
+      "pvpType": "optional",
+      "battlEye": true,
+      "premiumRequired": false,
+      "gameWorldType": "regular"
+    },
+    {
+      "name": "Utobra",
+      "playersOnlineCount": 34,
+      "location": "southAmerica",
+      "pvpType": "open",
+      "battlEye": true,
+      "premiumRequired": false,
+      "gameWorldType": "regular"
+    },
+    {
+      "name": "Venebra",
+      "playersOnlineCount": 60,
+      "location": "southAmerica",
+      "pvpType": "optional",
+      "battlEye": true,
+      "premiumRequired": false,
+      "gameWorldType": "regular"
+    },
+    {
+      "name": "Vitera",
+      "playersOnlineCount": 18,
+      "location": "northAmerica",
+      "pvpType": "optional",
+      "battlEye": true,
+      "premiumRequired": false,
+      "transferType": "blocked",
+      "gameWorldType": "regular"
+    },
+    {
+      "name": "Vunira",
+      "playersOnlineCount": 201,
+      "location": "europe",
+      "pvpType": "open",
+      "battlEye": true,
+      "battlEyeDate": "2017-10-19",
+      "premiumRequired": false,
+      "gameWorldType": "regular"
+    },
+    {
+      "name": "Wildera",
+      "playersOnlineCount": 6,
+      "location": "northAmerica",
+      "pvpType": "retroHardcore",
+      "battlEye": true,
+      "premiumRequired": false,
+      "gameWorldType": "regular"
+    },
+    {
+      "name": "Wintera",
+      "playersOnlineCount": 61,
+      "location": "northAmerica",
+      "pvpType": "open",
+      "battlEye": true,
+      "battlEyeDate": "2018-04-19",
+      "premiumRequired": false,
+      "gameWorldType": "regular"
+    },
+    {
+      "name": "Yonabra",
+      "playersOnlineCount": 47,
+      "location": "southAmerica",
+      "pvpType": "optional",
+      "battlEye": true,
+      "battlEyeDate": "2020-05-27",
+      "premiumRequired": false,
+      "gameWorldType": "regular"
+    },
+    {
+      "name": "Yovera",
+      "playersOnlineCount": 67,
+      "location": "northAmerica",
+      "pvpType": "optional",
+      "battlEye": true,
+      "premiumRequired": false,
+      "gameWorldType": "regular"
+    },
+    {
+      "name": "Zuna",
+      "playersOnlineCount": 10,
+      "location": "europe",
+      "pvpType": "hardcore",
+      "battlEye": false,
+      "premiumRequired": false,
+      "transferType": "locked",
+      "gameWorldType": "experimental"
+    },
+    {
+      "name": "Zunera",
+      "playersOnlineCount": 2,
+      "location": "northAmerica",
+      "pvpType": "hardcore",
+      "battlEye": false,
+      "premiumRequired": false,
+      "transferType": "locked",
+      "gameWorldType": "experimental"
+    }
+  ]
+}

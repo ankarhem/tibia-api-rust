@@ -1,6 +1,4 @@
-#![feature(async_fn_in_trait)]
-
-use std::{marker::Send, net::TcpListener};
+use std::net::TcpListener;
 
 use anyhow::Result;
 use axum::{body::Body, http::Request, routing::get, Router};
@@ -26,35 +24,49 @@ mod utils;
 
 use utils::*;
 
-#[derive(Clone, Default)]
+#[derive(Clone)]
 pub struct AppState<S: Client> {
     client: S,
 }
 
-pub fn app<S: Client>(state: AppState<S>) -> Router {
+impl AppState<TibiaClient> {
+    pub fn with_client<S: Client>(client: S) -> AppState<S> {
+        AppState { client }
+    }
+}
+
+impl Default for AppState<TibiaClient> {
+    fn default() -> Self {
+        Self {
+            client: TibiaClient::default(),
+        }
+    }
+}
+
+pub fn app<C: Client>(state: AppState<C>) -> Router {
     let openapi_docs = openapi::create_openapi_docs();
 
     let public_service = ServeDir::new("public");
 
     let app = Router::new()
         .route("/api/v1/towns", get(handlers::towns::get))
-        // .route("/api/v1/worlds", get(handlers::worlds::get))
-        // .route(
-        //     "/api/v1/worlds/:world_name",
-        //     get(handlers::worlds_world_name::get),
-        // )
-        // .route(
-        //     "/api/v1/worlds/:world_name/guilds",
-        //     get(handlers::worlds_world_name_guilds::get),
-        // )
-        // .route(
-        //     "/api/v1/worlds/:world_name/kill-statistics",
-        //     get(handlers::worlds_world_name_kill_statistics::get),
-        // )
-        // .route(
-        //     "/api/v1/worlds/:world_name/residences",
-        //     get(handlers::worlds_world_name_residences::get),
-        // )
+        .route("/api/v1/worlds", get(handlers::worlds::get))
+        .route(
+            "/api/v1/worlds/:world_name",
+            get(handlers::worlds_world_name::get),
+        )
+        .route(
+            "/api/v1/worlds/:world_name/guilds",
+            get(handlers::worlds_world_name_guilds::get),
+        )
+        .route(
+            "/api/v1/worlds/:world_name/kill-statistics",
+            get(handlers::worlds_world_name_kill_statistics::get),
+        )
+        .route(
+            "/api/v1/worlds/:world_name/residences",
+            get(handlers::worlds_world_name_residences::get),
+        )
         .route("/", get(handlers::redocly::redirect_redocly))
         .route("/api-docs", get(handlers::redocly::serve_redocly))
         .route("/__healthcheck", get(handlers::__healthcheck::get))

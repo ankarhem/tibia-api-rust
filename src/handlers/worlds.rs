@@ -8,7 +8,6 @@ use scraper::Selector;
 use tracing::instrument;
 
 use crate::{
-    clients::Client,
     models::{GameWorldType, TransferType, World, WorldsResponse},
     prelude::*,
     AppState,
@@ -28,7 +27,9 @@ use crate::{
     tag = "Worlds"
 )]
 #[instrument(name = "Get Worlds", skip(state))]
-pub async fn get(State(state): State<AppState>) -> Result<Json<WorldsResponse>, ServerError> {
+pub async fn get<S: Client>(
+    State(state): State<AppState<S>>,
+) -> Result<Json<WorldsResponse>, ServerError> {
     let client = &state.client;
 
     let response = client.fetch_worlds_page().await.map_err(|e| {
@@ -44,9 +45,22 @@ pub async fn get(State(state): State<AppState>) -> Result<Json<WorldsResponse>, 
 }
 
 #[instrument(skip(response))]
-async fn parse_worlds_page(response: Response) -> Result<WorldsResponse> {
+async fn parse_worlds_page(response: Response) -> Result<WorldsResponse, ServerError> {
     let text = response.text().await?;
     let document = scraper::Html::parse_document(&text);
+
+    let title_selector = Selector::parse("title").expect("Invalid selector for title");
+    let title = document
+        .select(&title_selector)
+        .next()
+        .and_then(|t| t.text().next())
+        .unwrap_or_default();
+
+    println!("title: {}", title);
+
+    if MAINTENANCE_TITLE == title {
+        return Err(TibiaClientError::Maintenance)?;
+    };
 
     let selector = Selector::parse(".main-content").expect("Invalid selector for main content");
     let main_content = &document

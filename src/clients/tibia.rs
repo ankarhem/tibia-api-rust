@@ -1,7 +1,6 @@
-use std::{collections::HashMap, time::Duration};
-
 use http_cache_reqwest::{CACacheManager, Cache, CacheMode, HttpCache, HttpCacheOptions};
 use reqwest_middleware::ClientWithMiddleware;
+use std::{collections::HashMap, time::Duration};
 use tracing::instrument;
 
 use crate::models::ResidenceType;
@@ -12,6 +11,17 @@ const COMMUNITY_URL: &str = "https://www.tibia.com/community/";
 pub struct TibiaClient {
     client: ClientWithMiddleware,
 }
+
+#[derive(thiserror::Error, Debug)]
+pub enum TibiaClientError {
+    #[error("Tibia is currently undergoing maintenance")]
+    Maintenance,
+}
+
+pub const MAINTENANCE_TITLE: &str =
+    "Tibia - Free Multiplayer Online Role Playing Game - Maintenance";
+
+#[async_trait::async_trait]
 pub trait Client: Send + Sync + Clone + 'static {
     async fn fetch_towns_page(&self) -> Result<reqwest::Response, reqwest_middleware::Error>;
     async fn fetch_worlds_page(&self) -> Result<reqwest::Response, reqwest_middleware::Error>;
@@ -60,11 +70,15 @@ impl TibiaClient {
 
         Self { client }
     }
+}
+
+impl Default for TibiaClient {
     fn default() -> Self {
         Self::new()
     }
 }
 
+#[async_trait::async_trait]
 impl Client for TibiaClient {
     #[instrument(skip(self))]
     async fn fetch_worlds_page(&self) -> Result<reqwest::Response, reqwest_middleware::Error> {

@@ -26,11 +26,18 @@ pub struct QueryParams {
     /// The town for which to fetch residences
     #[param(example = "Thais")]
     town: String,
+    /// The type of residence to fetch
+    #[serde(rename = "type")]
+    residence_type: ResidenceType,
 }
 
 impl QueryParams {
     pub fn town(&self) -> String {
         self.town.to_string()
+    }
+
+    pub fn residence_type(&self) -> ResidenceType {
+        self.residence_type
     }
 }
 
@@ -49,40 +56,32 @@ impl QueryParams {
     ),
     tag = "Worlds"
 )]
-#[instrument(skip(state))]
-#[instrument(name = "Get Houses", skip(state))]
-pub async fn get(
-    State(state): State<AppState>,
+#[instrument(name = "Get Residences", skip(state))]
+pub async fn get<S: Client>(
+    State(state): State<AppState<S>>,
     Path(path_params): Path<PathParams>,
     Query(query_params): Query<QueryParams>,
 ) -> Result<impl IntoResponse, ServerError> {
     let client = &state.client;
     let world_name = path_params.world_name();
     let town = query_params.town();
+    let residence_type = query_params.residence_type();
 
-    let houses = get_world_residences(client, &world_name, &ResidenceType::House, &town);
-    let guildhalls = get_world_residences(client, &world_name, &ResidenceType::Guildhall, &town);
+    let residences = get_world_residences(client, &world_name, &residence_type, &town).await?;
 
-    match futures::join!(houses, guildhalls) {
-        (Ok(Some(mut houses)), Ok(Some(guildhalls))) => {
-            houses.extend(guildhalls);
-            Ok(Json(houses).into_response())
-        }
-        (Ok(None), _) | (_, Ok(None)) => Ok(StatusCode::NOT_FOUND.into_response()),
-        (_, Err(e)) | (Err(e), _) => {
-            tracing::error!("Failed to fetch residences: {:?}", e);
-            Err(e.into())
-        }
+    match residences {
+        Some(r) => Ok(Json(r).into_response()),
+        None => Ok(StatusCode::NOT_FOUND.into_response()),
     }
 }
 
 #[instrument(skip(client))]
-pub async fn get_world_residences(
-    client: &TibiaClient,
+pub async fn get_world_residences<S: Client>(
+    client: &S,
     world_name: &str,
     residence_type: &ResidenceType,
     town: &str,
-) -> Result<Option<Vec<Residence>>> {
+) -> Result<Option<Vec<Residence>>, ServerError> {
     let response = client
         .fetch_residences_page(world_name, residence_type, town)
         .await?;
@@ -97,9 +96,20 @@ async fn parse_residences_page(
     world_name: &str,
     residence_type: &ResidenceType,
     town: &str,
-) -> Result<Option<Vec<Residence>>> {
+) -> Result<Option<Vec<Residence>>, ServerError> {
     let text = response.text().await?;
     let document = scraper::Html::parse_document(&text);
+
+    let title_selector = Selector::parse("title").expect("Invalid selector for title");
+    let title = document
+        .select(&title_selector)
+        .next()
+        .and_then(|t| t.text().next())
+        .unwrap_or_default();
+
+    if MAINTENANCE_TITLE == title {
+        return Err(TibiaClientError::Maintenance)?;
+    };
 
     let selector = Selector::parse(".main-content").expect("Selector to be valid");
     let main_content = document
@@ -172,7 +182,7 @@ async fn parse_residences_page(
         let value = status.to_string().sanitize();
         let status = match value.as_str() {
             "rented" => ResidenceStatus::Rented,
-            "auction (no bid yet)" => ResidenceStatus::AuctionNoBid,
+            "auctioned (no bid yet)" => ResidenceStatus::AuctionNoBid,
             _ => {
                 let gold_re = Regex::new(r"(\d+) gold").expect("Invalid residence gold regex");
                 let gold_str = gold_re
@@ -224,7 +234,7 @@ async fn parse_residences_page(
                                 expiry_time: expires_dt,
                             }
                         }
-                        _ => return Err(anyhow!(format!("Time and unit not found: `{}`", value))),
+                        _ => return Err(anyhow!(format!("Time and unit not found: `{}`", value)))?,
                     }
                 }
             }

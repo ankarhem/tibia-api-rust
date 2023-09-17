@@ -1,4 +1,4 @@
-use crate::{clients::Client, prelude::*};
+use crate::prelude::*;
 use anyhow::{Context, Result};
 use axum::{extract::State, Json};
 use scraper::Selector;
@@ -39,13 +39,16 @@ use crate::AppState;
     tag = "Towns"
 )]
 #[instrument(name = "Get Towns", skip(state))]
-pub async fn get(State(state): State<AppState>) -> Result<Json<Vec<String>>, ServerError> {
+pub async fn get<S: Client>(
+    State(state): State<AppState<S>>,
+) -> Result<Json<Vec<String>>, ServerError> {
     let client = &state.client;
 
     let page = client.fetch_towns_page().await.map_err(|e| {
         tracing::error!("Failed to fetch towns page: {:?}", e);
         e
     })?;
+
     let towns = parse_towns_page(page).await.map_err(|e| {
         tracing::error!("Failed to parse towns page: {:?}", e);
         e
@@ -54,10 +57,21 @@ pub async fn get(State(state): State<AppState>) -> Result<Json<Vec<String>>, Ser
     Ok(Json(towns))
 }
 
-#[instrument(skip(response))]
-async fn parse_towns_page(response: reqwest::Response) -> Result<Vec<String>> {
-    let text = response.text().await?;
+#[instrument(skip(page))]
+async fn parse_towns_page(page: reqwest::Response) -> Result<Vec<String>, ServerError> {
+    let text = page.text().await?;
     let document = scraper::Html::parse_document(&text);
+
+    let title_selector = Selector::parse("title").expect("Invalid selector for title");
+    let title = document
+        .select(&title_selector)
+        .next()
+        .and_then(|t| t.text().next())
+        .unwrap_or_default();
+
+    if MAINTENANCE_TITLE == title {
+        return Err(TibiaClientError::Maintenance)?;
+    };
 
     let selector = Selector::parse(".main-content").expect("Invalid selector for main content");
     let main_content = &document

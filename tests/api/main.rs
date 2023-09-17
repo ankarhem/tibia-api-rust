@@ -1,15 +1,16 @@
-#![feature(async_fn_in_trait)]
-
 use once_cell::sync::Lazy;
-use tibia_api::{app, run, telemetry, AppState};
+use tibia_api::{app, clients::Client, run, telemetry, AppState};
 
 mod __healthcheck;
+mod mocked_client;
 mod towns;
 mod worlds;
 mod worlds_world_name;
 mod worlds_world_name_guilds;
 mod worlds_world_name_kill_statistics;
 mod worlds_world_name_residences;
+
+pub use mocked_client::*;
 
 static TRACING: Lazy<()> = Lazy::new(|| {
     let default_filter_level = "info".to_string();
@@ -26,7 +27,7 @@ static TRACING: Lazy<()> = Lazy::new(|| {
     }
 });
 
-pub fn spawn_app(state: AppState) -> std::net::SocketAddr {
+pub fn spawn_app<C: Client>(state: AppState<C>) -> std::net::SocketAddr {
     Lazy::force(&TRACING);
 
     let listener = std::net::TcpListener::bind("127.0.0.1:0").expect("To bind to random port");
