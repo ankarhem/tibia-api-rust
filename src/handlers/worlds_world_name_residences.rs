@@ -4,7 +4,7 @@ use axum::{
     response::IntoResponse,
     Json,
 };
-use chrono::{Duration, Timelike};
+use chrono::{DateTime, Duration, Timelike, Utc};
 use itertools::Itertools;
 use regex::Regex;
 use reqwest::{Response, StatusCode};
@@ -203,38 +203,47 @@ async fn parse_residences_page(
                         .captures(&value)
                         .context(format!("Time not found: `{}`", value))?;
 
-                    let time = time_matches
+                    let time: i64 = time_matches
                         .get(1)
                         .map(|t| t.as_str())
-                        .and_then(|t| t.parse().ok());
-                    let time_unit = time_matches.get(2).map(|u| u.as_str());
+                        .and_then(|t| t.parse().ok())
+                        .context("Could not parse time")?;
+                    let time_unit = time_matches
+                        .get(2)
+                        .map(|u| u.as_str())
+                        .context("Could not parse time unit")?;
 
-                    // current date time without minutes / seconds
                     let current_dt = chrono::Utc::now()
                         .with_minute(0)
                         .and_then(|d| d.with_second(0))
                         .and_then(|d| d.with_nanosecond(0))
                         .context("Failed to construct current time")?;
 
-                    match (time, time_unit) {
-                        (Some(time), Some(unit)) => {
-                            let duration = match unit {
-                                "day" | "days" => Duration::days(time),
-                                "hour" | "hours" => Duration::hours(time),
-                                // Because of the regex this cannot happen
-                                _ => panic!("Invalid time unit"),
-                            };
-
-                            let expires_dt =
-                                current_dt.checked_add_signed(duration).context(format!(
-                                    "Failed to calculate expiry time `{time}` with unit `{unit}`"
-                                ))?;
-                            ResidenceStatus::AuctionWithBid {
-                                bid: gold,
-                                expiry_time: expires_dt,
-                            }
+                    let current_hour = current_dt.hour();
+                    // if unit is days, set hour to 8 (utc server save)
+                    // otherwise we need to add an hour (0h30min left => set min 0 and add hour)
+                    let current_dt = match time_unit {
+                        "day" | "days" => {
+                            current_dt.with_hour(8).context("Failed to set hour to 8")?
                         }
-                        _ => return Err(anyhow!(format!("Time and unit not found: `{}`", value)))?,
+                        _ => current_dt
+                            .with_hour(current_hour + 1)
+                            .context("Failed to add hour")?,
+                    };
+
+                    let duration = match time_unit {
+                        "day" | "days" => Duration::days(time),
+                        "hour" | "hours" => Duration::hours(time),
+                        // Because of the regex this cannot happen
+                        _ => panic!("Invalid time unit"),
+                    };
+
+                    let expires_dt = current_dt.checked_add_signed(duration).context(format!(
+                        "Failed to calculate expiry time `{time}` with unit `{time_unit}`"
+                    ))?;
+                    ResidenceStatus::AuctionWithBid {
+                        bid: gold,
+                        expiry_time: expires_dt,
                     }
                 }
             }

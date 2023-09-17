@@ -22,6 +22,38 @@ async fn can_get_residences() {
     let expected = include_str!("../mocks/houses-jaguna-edron-200.json");
     let expected_json = serde_json::from_str::<Value>(expected).unwrap();
 
+    // strip expiryTime from received_json because it's determined at runtime
+    let expected_json = expected_json
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|v| {
+            let mut value = v.as_object().unwrap().clone();
+            let mut status = value.get("status").unwrap().as_object().unwrap().clone();
+            status.remove("expiryTime");
+
+            value.remove("status");
+            value.insert("status".to_string(), Value::Object(status));
+
+            Value::Object(value.clone())
+        })
+        .collect::<Vec<_>>();
+    let received_json = received_json
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|v| {
+            let mut value = v.as_object().unwrap().clone();
+            let mut status = value.get("status").unwrap().as_object().unwrap().clone();
+            status.remove("expiryTime");
+
+            value.remove("status");
+            value.insert("status".to_string(), Value::Object(status));
+
+            Value::Object(value.clone())
+        })
+        .collect::<Vec<_>>();
+
     assert_eq!(expected_json, received_json);
 }
 
