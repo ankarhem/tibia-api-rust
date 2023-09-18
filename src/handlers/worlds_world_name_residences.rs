@@ -4,11 +4,15 @@ use axum::{
     Json,
 };
 use chrono::{Duration, Timelike};
-use futures::future::join_all;
+use futures::prelude::*;
 use itertools::Itertools;
 use regex::Regex;
 use reqwest::Response;
 
+use futures::{
+    future::FutureExt,
+    stream::{self, StreamExt},
+};
 use scraper::Selector;
 use serde::{Deserialize, Serialize};
 use tracing::instrument;
@@ -83,16 +87,32 @@ pub async fn get<S: Client>(
         }
     }
 
-    let futures = combinations.iter().map(|(residence_type, town)| {
-        get_world_residences(client, &world_name, residence_type, town)
+    let futures = combinations.into_iter().map(|(residence_type, town)| {
+        let world_name_clone = world_name.clone();
+        let residence_type_clone = residence_type.clone();
+        let town_clone = town.clone();
+
+        async move {
+            get_world_residences(
+                client,
+                &world_name_clone,
+                &residence_type_clone,
+                &town_clone,
+            )
+            .await
+        }
     });
 
-    let residences = join_all(futures)
+    let streams = futures::stream::iter(futures)
+        .buffer_unordered(3)
+        .collect::<Vec<_>>();
+
+    let residences = streams
         .await
         .into_iter()
-        .collect::<Result<Vec<Vec<Residence>>, ServerError>>()?;
+        .flatten_ok()
+        .collect::<Result<Vec<Residence>, ServerError>>()?;
 
-    let residences = residences.into_iter().flatten().collect_vec();
     Ok(Json(residences))
 }
 
