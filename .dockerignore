@@ -1,0 +1,6 @@
+target/
+.git/
+.github/
+http-cache/
+logs/
+tests/
