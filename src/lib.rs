@@ -121,14 +121,20 @@ pub async fn run(app: Router, listener: TcpListener) -> Result<()> {
 
     tracing::info!("Listening on {}", addr);
 
-    axum::Server::from_tcp(listener)?
+    let server = axum::Server::from_tcp(listener)?
         .serve(app.into_make_service())
         .with_graceful_shutdown(async {
             tokio::signal::ctrl_c()
                 .await
                 .expect("Failed to install CTRL+C signal handler");
-        })
-        .await?;
+        });
+
+    // Fills state with towns
+    tokio::spawn(async move {
+        let _ = reqwest::get(format!("http://{addr}/api/v1/towns")).await;
+    });
+
+    server.await?;
 
     Ok(())
 }
