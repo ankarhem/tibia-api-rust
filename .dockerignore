@@ -4,3 +4,4 @@ target/
 http-cache/
 logs/
 tests/
+.gitattributes
