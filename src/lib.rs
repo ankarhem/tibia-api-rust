@@ -1,4 +1,7 @@
-use std::net::TcpListener;
+use std::{
+    net::TcpListener,
+    sync::{Arc, Mutex},
+};
 
 use anyhow::Result;
 use axum::{body::Body, http::Request, routing::get, Router};
@@ -27,11 +30,15 @@ use utils::*;
 #[derive(Clone)]
 pub struct AppState<S: Client> {
     client: S,
+    towns: Arc<Mutex<Vec<String>>>,
 }
 
 impl AppState<TibiaClient> {
     pub fn with_client<S: Client>(client: S) -> AppState<S> {
-        AppState { client }
+        AppState {
+            client,
+            towns: Arc::new(Mutex::new(vec![])),
+        }
     }
 }
 
@@ -39,6 +46,7 @@ impl Default for AppState<TibiaClient> {
     fn default() -> Self {
         Self {
             client: TibiaClient::default(),
+            towns: Arc::new(Mutex::new(vec![])),
         }
     }
 }
@@ -113,14 +121,20 @@ pub async fn run(app: Router, listener: TcpListener) -> Result<()> {
 
     tracing::info!("Listening on {}", addr);
 
-    axum::Server::from_tcp(listener)?
+    let server = axum::Server::from_tcp(listener)?
         .serve(app.into_make_service())
         .with_graceful_shutdown(async {
             tokio::signal::ctrl_c()
                 .await
                 .expect("Failed to install CTRL+C signal handler");
-        })
-        .await?;
+        });
+
+    // Fills state with towns
+    tokio::spawn(async move {
+        let _ = reqwest::get(format!("http://{addr}/api/v1/towns")).await;
+    });
+
+    server.await?;
 
     Ok(())
 }

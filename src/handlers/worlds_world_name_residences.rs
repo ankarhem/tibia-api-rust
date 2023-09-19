@@ -4,11 +4,11 @@ use axum::{
     Json,
 };
 use chrono::{Duration, Timelike};
-use futures::future::join_all;
 use itertools::Itertools;
 use regex::Regex;
 use reqwest::Response;
 
+use futures::stream::StreamExt;
 use scraper::Selector;
 use serde::{Deserialize, Serialize};
 use tracing::instrument;
@@ -25,15 +25,15 @@ use crate::{
 pub struct QueryParams {
     /// The town for which to fetch residences
     #[param(example = "Thais")]
-    town: String,
+    town: Option<String>,
     /// Filter residences by type
     #[serde(rename = "type")]
     residence_type: Option<ResidenceType>,
 }
 
 impl QueryParams {
-    pub fn town(&self) -> String {
-        self.town.to_string()
+    pub fn town(&self) -> Option<String> {
+        self.town.clone()
     }
 
     pub fn residence_type(&self) -> Option<ResidenceType> {
@@ -64,22 +64,51 @@ pub async fn get<S: Client>(
 ) -> Result<Json<Vec<Residence>>, ServerError> {
     let client = &state.client;
     let world_name = path_params.world_name();
-    let town = query_params.town();
+    let towns = match query_params.town() {
+        Some(t) => vec![t],
+        None => {
+            let towns = state.towns.lock().unwrap();
+            towns.clone()
+        }
+    };
     let residence_types = query_params
         .residence_type()
         .map(|t| vec![t])
         .unwrap_or(vec![ResidenceType::House, ResidenceType::Guildhall]);
 
-    let futures = residence_types
-        .iter()
-        .map(|residence_type| get_world_residences(client, &world_name, residence_type, &town));
+    let mut combinations = Vec::with_capacity(towns.len() * residence_types.len());
+    for town in &towns {
+        for residence_type in &residence_types {
+            combinations.push((*residence_type, town.to_string()))
+        }
+    }
 
-    let residences = join_all(futures)
-        .await
+    // create an iterator of futures to execute
+    let futures =
+        (0..combinations.len()).map(|n| {
+            let combination = combinations.get(n).unwrap().clone();
+            let world_name = world_name.clone();
+            async move {
+                get_world_residences(client, &world_name, &combination.0, &combination.1).await
+            }
+        });
+
+    // create a buffered stream that will execute up to 10 futures in parallel
+    // (without preserving the order of the results)
+    let stream = futures::stream::iter(futures).buffer_unordered(10);
+
+    // wait for all futures to complete
+    let results = stream.collect::<Vec<_>>().await;
+
+    let residences = results
         .into_iter()
-        .collect::<Result<Vec<Vec<Residence>>, ServerError>>()?;
+        .flatten_ok()
+        .collect::<Result<Vec<Residence>, ServerError>>()
+        .map_err(|e| {
+            tracing::error!("Could not get residences: {:?}", e);
+            e
+        })?;
 
-    let residences = residences.into_iter().flatten().collect_vec();
     Ok(Json(residences))
 }
 
@@ -92,8 +121,25 @@ pub async fn get_world_residences<S: Client>(
 ) -> Result<Vec<Residence>, ServerError> {
     let response = client
         .fetch_residences_page(world_name, residence_type, town)
-        .await?;
-    let houses = parse_residences_page(response, world_name, residence_type, town).await?;
+        .await
+        .map_err(|e| {
+            tracing::error!(
+                "Failed to residences for {world_name}, {:?}, {town}: {:?}",
+                residence_type,
+                e
+            );
+            e
+        })?;
+    let houses = parse_residences_page(response, world_name, residence_type, town)
+        .await
+        .map_err(|e| {
+            tracing::error!(
+                "Failed to parse residence page for {world_name}, {:?}, {town}: {:?}",
+                residence_type,
+                e
+            );
+            e
+        })?;
 
     Ok(houses)
 }
@@ -134,7 +180,8 @@ async fn parse_residences_page(
 
     // If this doesn't match, a complex (invalid) town has been passed
     // and we should 404
-    let re = regex::Regex::new(&format!("(.*) in {town} on {world_name}")).unwrap();
+    let re =
+        regex::Regex::new(&format!("(.*) in {town} on {world_name}")).context("Invalid regex")?;
     if re.find(title).is_none() {
         return Err(TibiaError::NotFound)?;
     }
@@ -150,23 +197,41 @@ async fn parse_residences_page(
     let row_selector = Selector::parse("tr").expect("Selector to be valid");
     let house_rows = tables.next().unwrap().select(&row_selector).skip(1);
 
+    let towns_selector =
+        Selector::parse("input[name=town]").expect("Invalid selector for towns row");
+    let towns = tables
+        .last()
+        .unwrap()
+        .select(&towns_selector)
+        .map(|e| e.value().attr("value"))
+        .collect::<Option<Vec<_>>>()
+        .context("Failed to parse towns")?;
+
+    let towns: Vec<String> = towns.iter().map(|t| t.to_string().sanitize()).collect();
+
+    if !towns.contains(&town.to_string()) {
+        return Err(TibiaError::NotFound)?;
+    }
+
     let mut residences = vec![];
 
     let house_id_selector = Selector::parse("input[name=\"houseid\"]").expect("Invalid selector");
+
+    let column_count = house_rows.clone().next().map(|r| r.text().count());
+    if let Some(1) = column_count {
+        return Ok(vec![]);
+    }
 
     for row in house_rows {
         let house_id = row
             .select(&house_id_selector)
             .next()
-            .and_then(|e| e.value().attr("value"))
+            .context("House id input not found")?;
+        let house_id = house_id
+            .value()
+            .attr("value")
             .and_then(|s| s.parse::<u32>().ok())
-            .context("Failed to parse house id")?;
-
-        // If it's an invalid town it will be `No <residence_type> found.`
-        let column_count = row.text().count();
-        if column_count == 1 {
-            return Err(TibiaError::NotFound)?;
-        }
+            .context("Could not parse house id {house_id}")?;
 
         let (name, size, rent, status) = row
             .text()

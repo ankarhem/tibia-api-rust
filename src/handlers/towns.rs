@@ -54,6 +54,13 @@ pub async fn get<S: Client>(
         e
     })?;
 
+    match state.towns.lock() {
+        Ok(mut guard) => {
+            *guard = towns.clone();
+        }
+        Err(_poisoned) => Err(anyhow::anyhow!("Mutex poisoned"))?,
+    }
+
     Ok(Json(towns))
 }
 
@@ -86,22 +93,15 @@ async fn parse_towns_page(page: reqwest::Response) -> Result<Vec<String>, Server
         .last()
         .context("Towns table not found")?;
 
-    let towns_row_selector =
-        Selector::parse("tr > td[valign=\"top\"").expect("Invalid selector for towns row");
-    let towns_row = table
-        .select(&towns_row_selector)
-        .next()
-        .context("Towns row not found")?;
+    let towns_selector =
+        Selector::parse("input[name=town]").expect("Invalid selector for towns row");
+    let towns = table
+        .select(&towns_selector)
+        .map(|e| e.value().attr("value"))
+        .collect::<Option<Vec<_>>>()
+        .context("Failed to parse towns")?;
 
-    let mut towns: Vec<String> = vec![];
-    let town_selector = Selector::parse("label").expect("Invalid selector for town");
-    for town in towns_row.select(&town_selector) {
-        let town_name = town.text().collect::<String>();
-
-        if !town_name.is_empty() {
-            towns.push(town_name.sanitize());
-        }
-    }
+    let towns = towns.iter().map(|t| t.to_string().sanitize()).collect();
 
     Ok(towns)
 }
