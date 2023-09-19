@@ -4,15 +4,11 @@ use axum::{
     Json,
 };
 use chrono::{Duration, Timelike};
-use futures::prelude::*;
 use itertools::Itertools;
 use regex::Regex;
 use reqwest::Response;
 
-use futures::{
-    future::FutureExt,
-    stream::{self, StreamExt},
-};
+use futures::stream::StreamExt;
 use scraper::Selector;
 use serde::{Deserialize, Serialize};
 use tracing::instrument;
