@@ -83,35 +83,35 @@ pub async fn get<S: Client>(
     let mut combinations = Vec::with_capacity(towns.len() * residence_types.len());
     for town in &towns {
         for residence_type in &residence_types {
-            combinations.push((residence_type, town))
+            combinations.push((*residence_type, town.to_string()))
         }
     }
 
-    let futures = combinations.into_iter().map(|(residence_type, town)| {
-        let world_name_clone = world_name.clone();
-        let residence_type_clone = residence_type.clone();
-        let town_clone = town.clone();
+    // create an iterator of futures to execute
+    let futures =
+        (0..combinations.len()).map(|n| {
+            let combination = combinations.get(n).unwrap().clone();
+            let world_name = world_name.clone();
+            async move {
+                get_world_residences(client, &world_name, &combination.0, &combination.1).await
+            }
+        });
 
-        async move {
-            get_world_residences(
-                client,
-                &world_name_clone,
-                &residence_type_clone,
-                &town_clone,
-            )
-            .await
-        }
-    });
+    // create a buffered stream that will execute up to 10 futures in parallel
+    // (without preserving the order of the results)
+    let stream = futures::stream::iter(futures).buffer_unordered(10);
 
-    let streams = futures::stream::iter(futures)
-        .buffer_unordered(3)
-        .collect::<Vec<_>>();
+    // wait for all futures to complete
+    let results = stream.collect::<Vec<_>>().await;
 
-    let residences = streams
-        .await
+    let residences = results
         .into_iter()
         .flatten_ok()
-        .collect::<Result<Vec<Residence>, ServerError>>()?;
+        .collect::<Result<Vec<Residence>, ServerError>>()
+        .map_err(|e| {
+            tracing::error!("Could not get residences: {:?}", e);
+            e
+        })?;
 
     Ok(Json(residences))
 }
@@ -127,13 +127,21 @@ pub async fn get_world_residences<S: Client>(
         .fetch_residences_page(world_name, residence_type, town)
         .await
         .map_err(|e| {
-            tracing::error!("Failed to fetch residence page: {:?}", e);
+            tracing::error!(
+                "Failed to residences for {world_name}, {:?}, {town}: {:?}",
+                residence_type,
+                e
+            );
             e
         })?;
     let houses = parse_residences_page(response, world_name, residence_type, town)
         .await
         .map_err(|e| {
-            tracing::error!("Failed to parse residence page: {:?}", e);
+            tracing::error!(
+                "Failed to parse residence page for {world_name}, {:?}, {town}: {:?}",
+                residence_type,
+                e
+            );
             e
         })?;
 
@@ -193,23 +201,41 @@ async fn parse_residences_page(
     let row_selector = Selector::parse("tr").expect("Selector to be valid");
     let house_rows = tables.next().unwrap().select(&row_selector).skip(1);
 
+    let towns_selector =
+        Selector::parse("input[name=town]").expect("Invalid selector for towns row");
+    let towns = tables
+        .last()
+        .unwrap()
+        .select(&towns_selector)
+        .map(|e| e.value().attr("value"))
+        .collect::<Option<Vec<_>>>()
+        .context("Failed to parse towns")?;
+
+    let towns: Vec<String> = towns.iter().map(|t| t.to_string().sanitize()).collect();
+
+    if !towns.contains(&town.to_string()) {
+        return Err(TibiaError::NotFound)?;
+    }
+
     let mut residences = vec![];
 
     let house_id_selector = Selector::parse("input[name=\"houseid\"]").expect("Invalid selector");
+
+    let column_count = house_rows.clone().next().map(|r| r.text().count());
+    if let Some(1) = column_count {
+        return Ok(vec![]);
+    }
 
     for row in house_rows {
         let house_id = row
             .select(&house_id_selector)
             .next()
-            .and_then(|e| e.value().attr("value"))
+            .context("House id input not found")?;
+        let house_id = house_id
+            .value()
+            .attr("value")
             .and_then(|s| s.parse::<u32>().ok())
-            .context("Failed to parse house id")?;
-
-        // If it's an invalid town it will be `No <residence_type> found.`
-        let column_count = row.text().count();
-        if column_count == 1 {
-            return Err(TibiaError::NotFound)?;
-        }
+            .context("Could not parse house id {house_id}")?;
 
         let (name, size, rent, status) = row
             .text()
