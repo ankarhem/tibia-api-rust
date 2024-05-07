@@ -9,6 +9,7 @@ pub enum Location {
     Europe,
     SouthAmerica,
     NorthAmerica,
+    Oceania
 }
 
 impl std::str::FromStr for Location {
@@ -20,6 +21,7 @@ impl std::str::FromStr for Location {
             "Europe" => Ok(Location::Europe),
             "North America" => Ok(Location::NorthAmerica),
             "South America" => Ok(Location::SouthAmerica),
+            "Oceania" => Ok(Location::Oceania),
             _ => Err(anyhow!("Unexpected location: '{}'", s)),
         }
     }
