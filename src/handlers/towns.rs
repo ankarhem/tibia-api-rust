@@ -56,7 +56,7 @@ pub async fn get<S: Client>(
 
     match state.towns.lock() {
         Ok(mut guard) => {
-            *guard = towns.clone();
+            guard.clone_from(&towns);
         }
         Err(_poisoned) => Err(anyhow::anyhow!("Mutex poisoned"))?,
     }
