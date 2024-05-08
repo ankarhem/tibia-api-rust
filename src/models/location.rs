@@ -9,7 +9,7 @@ pub enum Location {
     Europe,
     SouthAmerica,
     NorthAmerica,
-    Oceania
+    Oceania,
 }
 
 impl std::str::FromStr for Location {
